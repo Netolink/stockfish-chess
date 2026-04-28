@@ -1,55 +1,158 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Netolink AI Chess Lab</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        #board { width: 400px; max-width: 90vw; margin: 20px 0; }
-        .container { display: flex; gap: 20px; max-width: 1000px; width: 100%; justify-content: center; flex-wrap: wrap; }
-        .sidebar { flex: 1; min-width: 300px; background: #2d2d2d; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .engine-info { background: #000; padding: 15px; border-radius: 5px; border-left: 4px solid #4af; margin: 15px 0; }
-        .score { font-size: 1.5em; font-weight: bold; color: #4af; }
-        .best-line { font-family: monospace; color: #aaa; direction: ltr; text-align: left; margin-top: 10px; }
-        button { cursor: pointer; padding: 10px 20px; background: #4af; color: black; border: none; border-radius: 4px; font-weight: bold; margin-left: 10px; }
-        .label { color: #888; font-size: 0.9em; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #121212; 
+            color: #e0e0e0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 40px 20px; 
+            margin: 0; 
+            min-height: 100vh;
+        }
+        .container { 
+            display: flex; 
+            gap: 40px; 
+            max-width: 1100px; 
+            width: 100%; 
+            justify-content: center; 
+            flex-wrap: wrap; 
+            margin-top: 30px; 
+        }
+        #board { 
+            width: 480px; 
+            max-width: 95vw; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); 
+            border: 2px solid #333;
+        }
+        .sidebar { 
+            flex: 1; 
+            min-width: 340px; 
+            background: #1e1e1e; 
+            padding: 30px; 
+            border-radius: 16px; 
+            border: 1px solid #333; 
+            display: flex;
+            flex-direction: column;
+        }
+        .status-header {
+            margin-bottom: 25px;
+        }
+        .engine-info { 
+            background: #0a0a0a; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border-left: 4px solid #4af; 
+            margin: 20px 0; 
+        }
+        .score { 
+            font-size: 2.2em; 
+            font-weight: 700; 
+            color: #4af; 
+            font-family: 'Consolas', monospace; 
+        }
+        .best-line { 
+            font-family: 'Courier New', monospace; 
+            color: #888; 
+            direction: ltr; 
+            text-align: left; 
+            margin-top: 12px; 
+            background: #161616; 
+            padding: 12px; 
+            border-radius: 6px;
+            font-size: 0.95em;
+            word-break: break-all;
+        }
+        .controls { 
+            display: flex; 
+            gap: 12px; 
+            margin-top: auto; 
+        }
+        button { 
+            flex: 1; 
+            cursor: pointer; 
+            padding: 14px; 
+            background: #4af; 
+            color: #000; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            font-size: 15px; 
+            transition: all 0.2s ease; 
+        }
+        button:hover { 
+            background: #6bc4ff; 
+            transform: translateY(-2px); 
+        }
+        button#undoBtn { 
+            background: #333; 
+            color: #ccc; 
+        }
+        button#undoBtn:hover {
+            background: #444;
+        }
+        .label { 
+            color: #666; 
+            font-size: 0.75em; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            margin-bottom: 8px;
+        }
+        h1 { margin: 0; font-weight: 300; font-size: 2.5em; letter-spacing: -1px; }
+        h1 span { font-weight: 800; color: #4af; }
     </style>
 </head>
 <body>
 
-    <h1>Netolink <span style="color:#4af">AI Chess Lab</span></h1>
+    <h1>Netolink <span>AI Lab</span></h1>
 
     <div class="container">
         <div id="board"></div>
 
         <div class="sidebar">
-            <div class="label">סטטוס:</div>
-            <div id="status" style="font-size: 1.2em; margin-bottom: 15px;">מתחבר למנוע...</div>
-
-            <div class="engine-info">
-                <div class="label">ניתוח Stockfish:</div>
-                <div id="score" class="score">0.00</div>
-                <div class="best-line" id="bestLine">מחכה למהלך...</div>
+            <div class="status-header">
+                <div class="label">Current Status</div>
+                <div id="status" style="font-size: 1.4em; font-weight: 600;">Connecting Stockfish...</div>
             </div>
 
-            <button onclick="resetGame()">משחק חדש</button>
-            <button onclick="undoMove()">חזור מהלך</button>
+            <div class="engine-info">
+                <div class="label">Engine Evaluation</div>
+                <div id="score" class="score">0.00</div>
+                
+                <div class="label" style="margin-top:20px;">Predicted Line</div>
+                <div class="best-line" id="bestLine">Waiting for move...</div>
+            </div>
+
+            <div class="controls">
+                <button onclick="resetGame()">New Game</button>
+                <button id="undoBtn" onclick="undoMove()">Undo Move</button>
+            </div>
         </div>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 
     <script>
         var board = null;
         var game = new Chess();
         
-        // אתחול מנוע
+        // Initialize Stockfish Worker
         var stockfish = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
 
         function onDragStart (source, piece) {
             if (game.game_over()) return false;
+            // Only allow dragging white pieces
             if (piece.search(/^b/) !== -1) return false;
         }
 
@@ -68,27 +171,39 @@
             stockfish.onmessage = function(event) {
                 var msg = event.data;
                 
+                // Parse Evaluation
                 if (msg.includes('score cp')) {
                     var score = msg.split('score cp ')[1].split(' ')[0];
-                    $('#score').text((score / 100).toFixed(2));
+                    var eval = (score / 100).toFixed(2);
+                    $('#score').text(eval > 0 ? '+' + eval : eval);
                 }
                 
+                // Parse Best Line (PV)
                 if (msg.includes(' pv ')) {
-                    $('#bestLine').text(msg.split(' pv ')[1].split(' ').slice(0, 5).join(' → '));
+                    var pv = msg.split(' pv ')[1].split(' ').slice(0, 5).join(' → ');
+                    $('#bestLine').text(pv);
                 }
 
+                // Execute Best Move
                 if (msg.includes('bestmove')) {
                     var best = msg.split(' ')[1];
-                    game.move({ from: best.substring(0, 2), to: best.substring(2, 4), promotion: 'q' });
-                    board.position(game.fen());
-                    updateStatus();
+                    if (best !== '(none)') {
+                        game.move({ from: best.substring(0, 2), to: best.substring(2, 4), promotion: 'q' });
+                        board.position(game.fen());
+                        updateStatus();
+                    }
                 }
             };
         }
 
         function updateStatus() {
-            var status = game.turn() === 'b' ? 'המחשב חושב...' : 'תורך';
-            if (game.in_checkmate()) status = 'מט!';
+            var status = 'Your Turn';
+            if (game.turn() === 'b') status = 'Engine is thinking...';
+            
+            if (game.in_checkmate()) status = 'Game Over - Checkmate!';
+            else if (game.in_draw()) status = 'Game Over - Draw';
+            else if (game.in_check()) status += ' (Check!)';
+
             $('#status').text(status);
         }
 
@@ -96,27 +211,33 @@
             game.reset();
             board.start();
             updateStatus();
+            $('#score').text('0.00');
+            $('#bestLine').text('Waiting for move...');
         }
 
         function undoMove() {
-            game.undo(); game.undo();
+            game.undo(); // Undo engine move
+            game.undo(); // Undo user move
             board.position(game.fen());
             updateStatus();
         }
 
-        // פונקציית האתחול הקריטית
-        $(document).ready(function() {
-            board = Chessboard('board', {
+        function init() {
+            var config = {
                 draggable: true,
-                dropOffBoard: 'snapback',
                 position: 'start',
                 onDragStart: onDragStart,
                 onDrop: onDrop,
-                // שימוש בתמונות ממקור חיצוני אמין
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-            });
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                moveSpeed: 'slow',
+                snapbackSpeed: 500,
+                snapSpeed: 100
+            };
+            board = Chessboard('board', config);
             updateStatus();
-        });
+        }
+
+        $(window).on('load', init);
     </script>
 </body>
 </html>
