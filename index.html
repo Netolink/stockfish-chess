@@ -148,7 +148,7 @@ function askEngine() {
 
         function highlight(sq) { removeHighlights(); $(`#board .square-${sq}`).addClass('highlight-selected'); }
         function highlightLastMove(f, t) { $(`#board .square-${f}, #board .square-${t}`).addClass('highlight-last-move'); }
-        function removeHighlights() { $('#board .square-55d63').removeClass('highlight-selected highlight-last-move'); }
+        function removeHighlights() { $('#board [class*="square-"]').removeClass('highlight-selected highlight-last-move'); }
 
         function updateUI() {
             $('#history').text(game.pgn());
