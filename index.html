@@ -220,7 +220,7 @@
             }
         }
 
-        // הזרקת הנתיב לפני טעינת ה-Worker
+        // 1. הגדרת הנתיבים מראש - זה הקסם שפותר את השגיאות ב-Console
         var Module = {
             locateFile: function (path) {
                 if (path.endsWith('.wasm')) return 'sf18.wasm';
@@ -228,60 +228,60 @@
             }
         };
 
-        const version = Date.now();
-        const stockfish = new Worker(`sf18.js?v=${version}`);
+        // 2. טעינת ה-Worker (בלי ה-?v= כדי לא לבלבל את המנוע הפנימי)
+        const stockfish = new Worker('sf18.js');
 
         function askEngine() {
             if (game.game_over()) return;
+
+            // עדכון סטטוס ויזואלי
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
-            // הגדרות חובה לגרסה 18
+            // 1. אתחול פרוטוקול UCI
+            stockfish.postMessage('uci');
+
+            // 2. הגדרות כוח (Single Thread בגלל ה-GitHub Pages)
             stockfish.postMessage('setoption name Threads value 1');
             stockfish.postMessage('setoption name Hash value 128');
+
+            // 3. הפעלת הרשת העצבית (חובה עבור גרסה 18)
             stockfish.postMessage('setoption name Use NNUE value true');
             stockfish.postMessage('setoption name EvalFile value stockfish.nnue');
 
+            // 4. שליחת המצב הנוכחי בלוח ופקודת חישוב
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage('go depth 18');
         }
 
         stockfish.onmessage = function (event) {
-            const line = event.data;
-            if (line.includes('bestmove')) {
-                const move = line.split(' ')[1];
-                game.move({ from: move.substring(0, 2), to: move.substring(2, 4), promotion: 'q' });
-                board.position(game.fen());
-                updateUI();
-            }
-        };
+            let msg = event.data;
+            console.log("SF says:", msg); // חשוב מאוד לראות את התקשורת ב-Console
 
-        function askEngine() {
-            if (game.game_over()) return;
-            $('#status').text('Stockfish 18 (Neural) is thinking...');
-
-            stockfish.postMessage('setoption name Threads value 1');
-            stockfish.postMessage('setoption name Hash value 128');
-            stockfish.postMessage('setoption name Use NNUE value true');
-            stockfish.postMessage('setoption name EvalFile value stockfish.nnue');
-
-            stockfish.postMessage(`position fen ${game.fen()}`);
-            stockfish.postMessage('go depth 18');
-        }
-
-        stockfish.onmessage = (e) => {
-            let msg = e.data;
+            // 1. עדכון מדד ההערכה (Score)
             if (msg.includes('score cp')) {
-                let s = (msg.split('score cp ')[1].split(' ')[0] / 100).toFixed(2);
-                $('#score').text(playerSide === 'w' ? s : (s * -1).toFixed(2));
+                let scoreVal = (msg.split('score cp ')[1].split(' ')[0] / 100).toFixed(2);
+                // התאמת הציון לפי הצד של השחקן
+                $('#score').text(playerSide === 'w' ? scoreVal : (scoreVal * -1).toFixed(2));
             }
+
+            // 2. ביצוע המהלך הטוב ביותר של המנוע
             if (msg.includes('bestmove')) {
-                let m = msg.split('bestmove ')[1].split(' ')[0];
-                if (m && m !== '(none)' && game.turn() !== playerSide) {
-                    let move = game.move({ from: m.substring(0, 2), to: m.substring(2, 4), promotion: 'q' });
-                    board.position(game.fen(), true);
-                    removeHighlights();
-                    highlightLastMove(move.from, move.to);
-                    updateUI();
+                let bestMove = msg.split('bestmove ')[1].split(' ')[0];
+
+                // מוודא שהמהלך תקין ושזה לא תור השחקן
+                if (bestMove && bestMove !== '(none)' && game.turn() !== playerSide) {
+                    let move = game.move({
+                        from: bestMove.substring(0, 2),
+                        to: bestMove.substring(2, 4),
+                        promotion: 'q'
+                    });
+
+                    if (move) {
+                        board.position(game.fen(), true);
+                        removeHighlights();
+                        highlightLastMove(move.from, move.to);
+                        updateUI();
+                    }
                 }
             }
         };
