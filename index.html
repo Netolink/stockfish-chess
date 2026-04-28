@@ -173,10 +173,6 @@
         let board = null;
         let playerSide = 'w';
         let sourceSquare = null;
-<<<<<<< HEAD
-=======
-        const stockfish = new Worker('stockfish-18-lite-single.js?v=999');
->>>>>>> 019ab72108fd72358c9419a425155e76dde496ee
 
         function generateClickCatcher() {
             const catcher = document.getElementById('click-catcher');
@@ -224,7 +220,6 @@
             }
         }
 
-<<<<<<< HEAD
         // הזרקת הנתיב לפני טעינת ה-Worker
         var Module = {
             locateFile: function (path) {
@@ -258,7 +253,7 @@
                 updateUI();
             }
         };
-=======
+
 function askEngine() {
     if (game.game_over()) return;
     $('#status').text('Stockfish 18 (Neural) is thinking...');
@@ -271,7 +266,6 @@ function askEngine() {
     stockfish.postMessage(`position fen ${game.fen()}`);
     stockfish.postMessage('go depth 18'); 
 }
->>>>>>> 019ab72108fd72358c9419a425155e76dde496ee
 
         stockfish.onmessage = (e) => {
             let msg = e.data;
