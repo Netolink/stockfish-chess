@@ -140,13 +140,13 @@
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             grid-template-rows: repeat(8, 1fr);
-            cursor: pointer;
-            z-index: 10;
-            /* השורה החדשה שתפתור את הבעיה */
+            /* ביטול חסימת העכבר מהשכבה השקופה */
             pointer-events: none;
+            z-index: 5;
+            /* נוריד מעט את העדיפות כדי שהכלים יהיו נגישים */
         }
 
-        /* ואז נוסיף שורה שתחזיר את היכולת ללחוץ על הדיבים הפנימיים */
+        /* אנחנו רוצים שהמשבצות עצמן יקבלו קליקים רק אם אין גרירה */
         #click-catcher div {
             pointer-events: auto;
         }
