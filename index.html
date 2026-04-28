@@ -143,8 +143,10 @@
         function askEngine() {
             if (game.game_over()) return;
             $('#status').text('Thinking...');
+            stockfish.postMessage('setoption name Threads value 4');
+            stockfish.postMessage('setoption name Hash value 128');
             stockfish.postMessage(`position fen ${game.fen()}`);
-            stockfish.postMessage('go depth 12');
+            stockfish.postMessage('go depth 18');
         }
 
         stockfish.onmessage = function(e) {
