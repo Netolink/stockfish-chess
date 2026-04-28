@@ -118,26 +118,6 @@
             color: white;
         }
 
-        #click-catcher {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            /* ביטול חסימת העכבר מהשכבה השקופה */
-            pointer-events: none;
-            z-index: 5;
-            /* נוריד מעט את העדיפות כדי שהכלים יהיו נגישים */
-        }
-
-        /* אנחנו רוצים שהמשבצות עצמן יקבלו קליקים רק אם אין גרירה */
-        #click-catcher div {
-            pointer-events: auto;
-        }
-
         .captured-pieces {
             display: flex;
             gap: 2px;
@@ -166,7 +146,6 @@
     <div class="container">
         <div id="board-wrapper">
             <div id="board"></div>
-            <div id="click-catcher"></div>
         </div>
 
         <div class="sidebar">
@@ -208,29 +187,12 @@
         let playerSide = 'w';
         let sourceSquare = null;
 
-        function generateClickCatcher() {
-            const catcher = document.getElementById('click-catcher');
-            catcher.innerHTML = '';
-            const isFlipped = board.orientation() === 'black';
 
-            const files = isFlipped ? ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a'] : ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-            const ranks = isFlipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
-
-            ranks.forEach(rank => {
-                files.forEach(file => {
-                    const sqPos = file + rank;
-                    const sqDiv = document.createElement('div');
-                    sqDiv.onclick = (e) => { e.stopPropagation(); handleSquareClick(sqPos); };
-                    catcher.appendChild(sqDiv);
-                });
-            });
-        }
-
-        // פונקציה לטיפול בלחיצות (כולל ביטול לחיצה שנייה)
-        function handleSquareClick(square) {
+        // הפונקציה המאוחדת שמטפלת בלחיצות ישירות על הלוח
+        function onSquareClick(square) {
             if (game.turn() !== playerSide || game.game_over()) return;
 
-            // אם לחצנו שוב על אותו כלי - בטל את הבחירה
+            // ביטול בחירה בלחיצה שנייה (Deselect)
             if (sourceSquare === square) {
                 sourceSquare = null;
                 removeHighlights();
@@ -241,14 +203,16 @@
                 const piece = game.get(sourceSquare);
                 let moveOptions = { from: sourceSquare, to: square, promotion: 'q' };
 
-                // בדיקת הכתרה
+                // בדיקת הכתרה (Promotion)
                 if (piece && piece.type === 'p' && (square[1] === '8' || square[1] === '1')) {
                     const promo = prompt("Promote to: (q)ueen, (r)ook, (b)ishop, or (k)night?", "q");
                     moveOptions.promotion = ['q', 'r', 'b', 'n'].includes(promo?.toLowerCase()) ? promo.toLowerCase() : 'q';
                 }
 
                 let move = game.move(moveOptions);
+
                 if (move === null) {
+                    // אם המהלך לא חוקי, בדוק אם המשתמש פשוט בחר כלי אחר שלו
                     let p = game.get(square);
                     if (p && p.color === playerSide) {
                         sourceSquare = square;
@@ -258,7 +222,8 @@
                         removeHighlights();
                     }
                 } else {
-                    board.position(game.fen(), true);
+                    // מהלך חוקי בוצע בלחיצה
+                    board.position(game.fen());
                     let from = sourceSquare;
                     sourceSquare = null;
                     removeHighlights();
@@ -267,6 +232,7 @@
                     setTimeout(askEngine, 250);
                 }
             } else {
+                // בחירת כלי ראשונית
                 let p = game.get(square);
                 if (p && p.color === playerSide) {
                     sourceSquare = square;
@@ -275,23 +241,30 @@
             }
         }
 
-        // פונקציה חדשה לטיפול בגרירה
+        // פונקציית הגרירה
         function onDrop(source, target) {
-            if (game.turn() !== playerSide || game.game_over()) return 'snapback';
-
-            let move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q' // ברירת מחדל להכתרה בגרירה
-            });
-
+            let move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
 
+            sourceSquare = null;
             removeHighlights();
             highlightLastMove(source, target);
             updateUI();
             setTimeout(askEngine, 250);
         }
+
+        // אתחול הלוח ב-$(document).ready
+        $(document).ready(function () {
+            board = Chessboard('board', {
+                draggable: true,
+                position: 'start',
+                onDrop: onDrop,
+                onSquareClick: onSquareClick, // חיבור הפונקציה החדשה
+                moveSpeed: 'fast',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            });
+            updateUI();
+        });
 
         // 1. הגדרת הנתיבים מראש - זה הקסם שפותר את השגיאות ב-Console
         var Module = {
@@ -357,7 +330,6 @@
         function flipBoard() {
             const current = board.orientation();
             board.orientation(current === 'white' ? 'black' : 'white');
-            generateClickCatcher(); // חשוב לעדכן את שכבת הלחיצות שתתאים לזווית החדשה
         }
 
         // פונקציה לחישוב והצגת הכלים האכולים (יתרון)
@@ -436,7 +408,7 @@
         function resetGame() {
             game.reset(); board.orientation(playerSide === 'w' ? 'white' : 'black');
             board.position('start'); sourceSquare = null; removeHighlights(); updateUI();
-            $('#score').text('0.00'); generateClickCatcher();
+            $('#score').text('0.00');
             if (playerSide === 'b') askEngine();
         }
 
@@ -451,7 +423,6 @@
                 moveSpeed: 'fast',
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
-            generateClickCatcher();
             updateUI();
         });
     </script>
