@@ -228,7 +228,8 @@
             }
         };
 
-        const stockfish = new Worker('sf18.js');
+        const version = Date.now();
+        const stockfish = new Worker(`sf18.js?v=${version}`);
 
         function askEngine() {
             if (game.game_over()) return;
@@ -254,18 +255,18 @@
             }
         };
 
-function askEngine() {
-    if (game.game_over()) return;
-    $('#status').text('Stockfish 18 (Neural) is thinking...');
+        function askEngine() {
+            if (game.game_over()) return;
+            $('#status').text('Stockfish 18 (Neural) is thinking...');
 
-    stockfish.postMessage('setoption name Threads value 1');
-    stockfish.postMessage('setoption name Hash value 128');
-    stockfish.postMessage('setoption name Use NNUE value true');
-    stockfish.postMessage('setoption name EvalFile value stockfish.nnue');
+            stockfish.postMessage('setoption name Threads value 1');
+            stockfish.postMessage('setoption name Hash value 128');
+            stockfish.postMessage('setoption name Use NNUE value true');
+            stockfish.postMessage('setoption name EvalFile value stockfish.nnue');
 
-    stockfish.postMessage(`position fen ${game.fen()}`);
-    stockfish.postMessage('go depth 18'); 
-}
+            stockfish.postMessage(`position fen ${game.fen()}`);
+            stockfish.postMessage('go depth 18');
+        }
 
         stockfish.onmessage = (e) => {
             let msg = e.data;
