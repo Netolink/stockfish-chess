@@ -189,13 +189,22 @@
             });
         }
 
+        // פונקציה לטיפול בלחיצות (כולל ביטול לחיצה שנייה)
         function handleSquareClick(square) {
             if (game.turn() !== playerSide || game.game_over()) return;
+
+            // אם לחצנו שוב על אותו כלי - בטל את הבחירה
+            if (sourceSquare === square) {
+                sourceSquare = null;
+                removeHighlights();
+                return;
+            }
+
             if (sourceSquare) {
-                // Check for promotion
                 const piece = game.get(sourceSquare);
                 let moveOptions = { from: sourceSquare, to: square, promotion: 'q' };
 
+                // בדיקת הכתרה
                 if (piece && piece.type === 'p' && (square[1] === '8' || square[1] === '1')) {
                     const promo = prompt("Promote to: (q)ueen, (r)ook, (b)ishop, or (k)night?", "q");
                     moveOptions.promotion = ['q', 'r', 'b', 'n'].includes(promo?.toLowerCase()) ? promo.toLowerCase() : 'q';
@@ -204,11 +213,17 @@
                 let move = game.move(moveOptions);
                 if (move === null) {
                     let p = game.get(square);
-                    if (p && p.color === playerSide) { sourceSquare = square; highlight(square); }
-                    else { sourceSquare = null; removeHighlights(); }
+                    if (p && p.color === playerSide) {
+                        sourceSquare = square;
+                        highlight(square);
+                    } else {
+                        sourceSquare = null;
+                        removeHighlights();
+                    }
                 } else {
                     board.position(game.fen(), true);
-                    let from = sourceSquare; sourceSquare = null;
+                    let from = sourceSquare;
+                    sourceSquare = null;
                     removeHighlights();
                     highlightLastMove(from, square);
                     updateUI();
@@ -216,8 +231,29 @@
                 }
             } else {
                 let p = game.get(square);
-                if (p && p.color === playerSide) { sourceSquare = square; highlight(square); }
+                if (p && p.color === playerSide) {
+                    sourceSquare = square;
+                    highlight(square);
+                }
             }
+        }
+
+        // פונקציה חדשה לטיפול בגרירה
+        function onDrop(source, target) {
+            if (game.turn() !== playerSide || game.game_over()) return 'snapback';
+
+            let move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q' // ברירת מחדל להכתרה בגרירה
+            });
+
+            if (move === null) return 'snapback';
+
+            removeHighlights();
+            highlightLastMove(source, target);
+            updateUI();
+            setTimeout(askEngine, 250);
         }
 
         // 1. הגדרת הנתיבים מראש - זה הקסם שפותר את השגיאות ב-Console
@@ -319,8 +355,15 @@
         function resign() { if (confirm("Resign?")) { alert("You resigned."); resetGame(); } }
 
         $(document).ready(function () {
-            board = Chessboard('board', { draggable: false, position: 'start', moveSpeed: 'fast', pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' });
-            generateClickCatcher(); updateUI();
+            board = Chessboard('board', {
+                draggable: true, // החזרנו את הגרירה!
+                position: 'start',
+                onDrop: onDrop, // פונקציה שמטפלת בסיום הגרירה
+                moveSpeed: 'fast',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            });
+            generateClickCatcher();
+            updateUI();
         });
     </script>
 </body>
