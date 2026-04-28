@@ -233,24 +233,17 @@
 
         function askEngine() {
             if (game.game_over()) return;
+            $('#status').text('Stockfish thinking (Classical)...');
 
-            // עדכון סטטוס ויזואלי
-            $('#status').text('Stockfish 18 (Neural) is thinking...');
-
-            // 1. אתחול פרוטוקול UCI
             stockfish.postMessage('uci');
-
-            // 2. הגדרות כוח (Single Thread בגלל ה-GitHub Pages)
             stockfish.postMessage('setoption name Threads value 1');
             stockfish.postMessage('setoption name Hash value 128');
 
-            // 3. הפעלת הרשת העצבית (חובה עבור גרסה 18)
-            stockfish.postMessage('setoption name Use NNUE value true');
-            stockfish.postMessage('setoption name EvalFile value stockfish.nnue');
+            // נטרול ה-NNUE לבדיקה
+            stockfish.postMessage('setoption name Use NNUE value false');
 
-            // 4. שליחת המצב הנוכחי בלוח ופקודת חישוב
             stockfish.postMessage(`position fen ${game.fen()}`);
-            stockfish.postMessage('go depth 18');
+            stockfish.postMessage('go depth 12'); // עומק נמוך יותר לבדיקה מהירה
         }
 
         stockfish.onmessage = function (event) {
