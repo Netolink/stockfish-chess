@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netolink AI Chess Lab</title>
+    <title>Netolink AI Lab</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     
     <style>
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
             background: #121212; 
             color: #e0e0e0; 
             display: flex; 
@@ -29,10 +29,11 @@
             margin-top: 30px; 
         }
         #board { 
-            width: 480px; 
+            width: 450px; 
             max-width: 95vw; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.6); 
-            border: 2px solid #333;
+            border-radius: 4px;
+            overflow: hidden;
         }
         .sidebar { 
             flex: 1; 
@@ -41,11 +42,6 @@
             padding: 30px; 
             border-radius: 16px; 
             border: 1px solid #333; 
-            display: flex;
-            flex-direction: column;
-        }
-        .status-header {
-            margin-bottom: 25px;
         }
         .engine-info { 
             background: #0a0a0a; 
@@ -69,45 +65,19 @@
             background: #161616; 
             padding: 12px; 
             border-radius: 6px;
-            font-size: 0.95em;
-            word-break: break-all;
+            min-height: 20px;
         }
-        .controls { 
-            display: flex; 
-            gap: 12px; 
-            margin-top: auto; 
-        }
+        .controls { display: flex; gap: 12px; margin-top: 20px; }
         button { 
-            flex: 1; 
-            cursor: pointer; 
-            padding: 14px; 
-            background: #4af; 
-            color: #000; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: 700; 
-            font-size: 15px; 
-            transition: all 0.2s ease; 
+            flex: 1; cursor: pointer; padding: 14px; 
+            background: #4af; color: #000; border: none; 
+            border-radius: 8px; font-weight: 700; font-size: 15px; 
+            transition: all 0.2s; 
         }
-        button:hover { 
-            background: #6bc4ff; 
-            transform: translateY(-2px); 
-        }
-        button#undoBtn { 
-            background: #333; 
-            color: #ccc; 
-        }
-        button#undoBtn:hover {
-            background: #444;
-        }
-        .label { 
-            color: #666; 
-            font-size: 0.75em; 
-            text-transform: uppercase; 
-            letter-spacing: 1.5px; 
-            margin-bottom: 8px;
-        }
-        h1 { margin: 0; font-weight: 300; font-size: 2.5em; letter-spacing: -1px; }
+        button:hover { background: #6bc4ff; }
+        button#undoBtn { background: #333; color: #ccc; }
+        .label { color: #666; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+        h1 { margin: 0; font-weight: 300; font-size: 2.5em; }
         h1 span { font-weight: 800; color: #4af; }
     </style>
 </head>
@@ -119,47 +89,40 @@
         <div id="board"></div>
 
         <div class="sidebar">
-            <div class="status-header">
-                <div class="label">Current Status</div>
-                <div id="status" style="font-size: 1.4em; font-weight: 600;">Connecting Stockfish...</div>
-            </div>
+            <div class="label">Current Status</div>
+            <div id="status" style="font-size: 1.4em; font-weight: 600; margin-bottom: 20px;">Ready to play</div>
 
             <div class="engine-info">
                 <div class="label">Engine Evaluation</div>
                 <div id="score" class="score">0.00</div>
-                
                 <div class="label" style="margin-top:20px;">Predicted Line</div>
                 <div class="best-line" id="bestLine">Waiting for move...</div>
             </div>
 
             <div class="controls">
                 <button onclick="resetGame()">New Game</button>
-                <button id="undoBtn" onclick="undoMove()">Undo Move</button>
+                <button id="undoBtn" onclick="undoMove()">Undo</button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
 
     <script>
         var board = null;
         var game = new Chess();
-        
-        // Initialize Stockfish Worker
         var stockfish = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
 
         function onDragStart (source, piece) {
             if (game.game_over()) return false;
-            // Only allow dragging white pieces
             if (piece.search(/^b/) !== -1) return false;
         }
 
         function onDrop (source, target) {
             var move = game.move({ from: source, to: target, promotion: 'q' });
             if (move === null) return 'snapback';
-            
             updateStatus();
             window.setTimeout(askStockfish, 250);
         }
@@ -170,21 +133,14 @@
             
             stockfish.onmessage = function(event) {
                 var msg = event.data;
-                
-                // Parse Evaluation
                 if (msg.includes('score cp')) {
                     var score = msg.split('score cp ')[1].split(' ')[0];
                     var eval = (score / 100).toFixed(2);
                     $('#score').text(eval > 0 ? '+' + eval : eval);
                 }
-                
-                // Parse Best Line (PV)
                 if (msg.includes(' pv ')) {
-                    var pv = msg.split(' pv ')[1].split(' ').slice(0, 5).join(' → ');
-                    $('#bestLine').text(pv);
+                    $('#bestLine').text(msg.split(' pv ')[1].split(' ').slice(0, 5).join(' → '));
                 }
-
-                // Execute Best Move
                 if (msg.includes('bestmove')) {
                     var best = msg.split(' ')[1];
                     if (best !== '(none)') {
@@ -197,13 +153,9 @@
         }
 
         function updateStatus() {
-            var status = 'Your Turn';
-            if (game.turn() === 'b') status = 'Engine is thinking...';
-            
-            if (game.in_checkmate()) status = 'Game Over - Checkmate!';
-            else if (game.in_draw()) status = 'Game Over - Draw';
-            else if (game.in_check()) status += ' (Check!)';
-
+            var status = game.turn() === 'b' ? 'Engine is thinking...' : 'Your Turn';
+            if (game.in_checkmate()) status = 'Checkmate!';
+            else if (game.in_draw()) status = 'Draw';
             $('#status').text(status);
         }
 
@@ -216,28 +168,23 @@
         }
 
         function undoMove() {
-            game.undo(); // Undo engine move
-            game.undo(); // Undo user move
+            game.undo(); game.undo();
             board.position(game.fen());
             updateStatus();
         }
 
-        function init() {
-            var config = {
+        // The critical initialization
+        $(document).ready(function() {
+            board = Chessboard('board', {
                 draggable: true,
                 position: 'start',
                 onDragStart: onDragStart,
                 onDrop: onDrop,
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                moveSpeed: 'slow',
-                snapbackSpeed: 500,
-                snapSpeed: 100
-            };
-            board = Chessboard('board', config);
+                // Using a more reliable piece theme source
+                pieceTheme: 'https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png'
+            });
             updateStatus();
-        }
-
-        $(window).on('load', init);
+        });
     </script>
 </body>
 </html>
