@@ -458,9 +458,14 @@
 
         $(document).ready(function () {
             board = Chessboard('board', {
-                draggable: true, // החזרנו את הגרירה!
+                draggable: true,
                 position: 'start',
-                onDrop: onDrop, // פונקציה שמטפלת בסיום הגרירה
+                onDrop: onDrop,
+                // הוספת פונקציה שמנקה סימונים כשמתחילים גרירה
+                onDragStart: function () {
+                    removeHighlights();
+                    sourceSquare = null;
+                },
                 moveSpeed: 'fast',
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
