@@ -259,6 +259,7 @@
         }
 
         $(document).ready(function () {
+            // 1. אתחול הלוח
             board = Chessboard('board', {
                 draggable: true,
                 position: 'start',
@@ -271,10 +272,17 @@
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
 
-            // פתרון Netolink ללחיצות: האזנה ישירה למשבצות הלוח
-            $('#board').on('click', '.square-55d63', function () {
-                let square = $(this).data('square');
-                onSquareClick(square);
+            // 2. פתרון Netolink: האזנה חכמה ללחיצות (Event Delegation)
+            // זה יעבוד גם אם הלוח נבנה מחדש או מתהפך
+            $(document).on('click', '#board [class*="square-"]', function () {
+                // חילוץ שם המשבצת מתוך הקלאס (למשל square-e4)
+                let classList = $(this).attr('class').split(/\s+/);
+                let squareClass = classList.find(c => c.startsWith('square-') && c.length === 9);
+
+                if (squareClass) {
+                    let square = squareClass.split('-')[1];
+                    onSquareClick(square);
+                }
             });
 
             updateUI();
