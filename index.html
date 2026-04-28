@@ -64,7 +64,7 @@
         let board = null;
         let playerSide = 'w';
         let sourceSquare = null;
-        const stockfish = new Worker('stockfish.js');
+        const stockfish = new Worker('stockfish-18-lite-single.js');
 
         function generateClickCatcher() {
             const catcher = document.getElementById('click-catcher');
@@ -114,17 +114,15 @@
 
 function askEngine() {
     if (game.game_over()) return;
-    $('#status').text('Stockfish 18 AI is thinking...');
+    $('#status').text('Stockfish 18 (Neural) is thinking...');
 
     stockfish.postMessage('setoption name Threads value 1');
     stockfish.postMessage('setoption name Hash value 128');
     stockfish.postMessage('setoption name Use NNUE value true');
-    
-    // וודא ששם הקובץ כאן תואם בדיוק למה שיש בגיטהאב
     stockfish.postMessage('setoption name EvalFile value stockfish.nnue');
 
     stockfish.postMessage(`position fen ${game.fen()}`);
-    stockfish.postMessage('go depth 18');
+    stockfish.postMessage('go depth 18'); 
 }
 
         stockfish.onmessage = (e) => {
