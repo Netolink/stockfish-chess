@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Netolink AI Lab - Pro Edition</title>
+    <title>Netolink AI Lab - Click-to-Move</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     
@@ -10,11 +10,11 @@
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: #121212; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .container { display: flex; gap: 25px; background: #1e1e1e; padding: 25px; border-radius: 16px; box-shadow: 0 10px 50px rgba(0,0,0,0.7); flex-wrap: wrap; justify-content: center; }
         
-        #board { width: 450px; border: 2px solid #333; border-radius: 4px; overflow: hidden; }
+        #board { width: 450px; border: 2px solid #333; border-radius: 4px; overflow: hidden; cursor: pointer; }
         
-        /* Highlighting squares */
-        .highlight-white { box-shadow: inset 0 0 3px 3px yellow; }
-        .highlight-black { box-shadow: inset 0 0 3px 3px yellow; }
+        /* Highlighting for moves and selection */
+        .highlight-move { box-shadow: inset 0 0 3px 3px rgba(255, 255, 0, 0.7); }
+        .highlight-selected { background-color: rgba(255, 255, 0, 0.5) !important; }
 
         .sidebar { width: 300px; display: flex; flex-direction: column; gap: 15px; }
         .engine-card { background: #000; padding: 15px; border-radius: 8px; border-left: 4px solid #4af; }
@@ -25,10 +25,8 @@
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         button { cursor: pointer; padding: 10px; background: #4af; color: #000; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; }
         button:hover { background: #6bc4ff; }
-        button:disabled { background: #333; color: #666; cursor: not-allowed; }
         .btn-alt { background: #333; color: #ccc; }
         .btn-danger { background: #600; color: #fff; }
-        .btn-danger:hover { background: #a00; }
         .active-side { border: 2px solid #4af; background: #004466; color: white; }
         h1 span { color: #4af; font-weight: 800; }
     </style>
@@ -72,26 +70,58 @@
         let game = new Chess();
         let board = null;
         let playerSide = 'w';
+        let sourceSquare = null;
         const stockfish = new Worker('stockfish.js');
 
-        function onDragStart (source, piece, position, orientation) {
-            if (game.game_over()) return false;
-            if ((playerSide === 'w' && piece.search(/^b/) !== -1) ||
-                (playerSide === 'b' && piece.search(/^w/) !== -1)) {
-                return false;
+        function removeHighlights() {
+            $('#board .square-55d63').removeClass('highlight-move highlight-selected');
+        }
+
+        function highlightSquare(sq, type) {
+            $(`#board .square-${sq}`).addClass(type === 'move' ? 'highlight-move' : 'highlight-selected');
+        }
+
+        function onSquareClick(square) {
+            if (game.turn() !== playerSide || game.game_over()) return;
+
+            // אם כבר נבחרה משבצת מקור
+            if (sourceSquare) {
+                let move = game.move({ from: sourceSquare, to: square, promotion: 'q' });
+                
+                if (move === null) {
+                    // אם לוחצים על כלי אחר שלנו, נחליף את הבחירה אליו
+                    let piece = game.get(square);
+                    if (piece && piece.color === playerSide) {
+                        sourceSquare = square;
+                        removeHighlights();
+                        highlightSquare(sourceSquare, 'selected');
+                    } else {
+                        // לחיצה לא חוקית - נבטל בחירה
+                        sourceSquare = null;
+                        removeHighlights();
+                    }
+                } else {
+                    // מהלך חוקי בוצע!
+                    board.position(game.fen());
+                    sourceSquare = null;
+                    removeHighlights();
+                    highlightSquare(move.from, 'move');
+                    highlightSquare(move.to, 'move');
+                    updateUI();
+                    window.setTimeout(askEngine, 250);
+                }
+            } else {
+                // לחיצה ראשונה - בחירת כלי
+                let piece = game.get(square);
+                if (piece && piece.color === playerSide) {
+                    sourceSquare = square;
+                    removeHighlights();
+                    highlightSquare(sourceSquare, 'selected');
+                }
             }
         }
 
-        function onDrop (source, target) {
-            let move = game.move({ from: source, to: target, promotion: 'q' });
-            if (move === null) return 'snapback';
-
-            removeHighlights();
-            highlightMove(source, target);
-            updateUI();
-            window.setTimeout(askEngine, 250);
-        }
-
+        // המנוע והלוגיקה
         function askEngine() {
             if (game.game_over()) return;
             $('#status').text('Thinking...');
@@ -111,22 +141,12 @@
                     let move = game.move({ from: m.substring(0,2), to: m.substring(2,4), promotion: 'q' });
                     board.position(game.fen());
                     removeHighlights();
-                    highlightMove(move.from, move.to);
+                    highlightSquare(move.from, 'move');
+                    highlightSquare(move.to, 'move');
                     updateUI();
                 }
             }
         };
-
-        function highlightMove(from, to) {
-            $(`#board .square-${from}`).addClass('highlight-white');
-            $(`#board .square-${to}`).addClass('highlight-white');
-        }
-
-        function removeHighlights() {
-            $('#board .square-55d63').removeClass('highlight-white highlight-black');
-            $('.sq, div[class^="square-"]').removeClass('highlight-white highlight-black'); // Global clear
-            $('#board [class*="square-"]').removeClass('highlight-white');
-        }
 
         function updateUI() {
             $('#history').text(game.pgn() || 'Moves will appear here...');
@@ -138,7 +158,7 @@
 
         function confirmReset() {
             if (game.history().length > 0 && !game.game_over()) {
-                if (!confirm("Game in progress. Start a new game anyway?")) return;
+                if (!confirm("Start new game? Progress will be lost.")) return;
             }
             resetGame();
         }
@@ -147,6 +167,7 @@
             game.reset();
             board.orientation(playerSide === 'w' ? 'white' : 'black');
             board.position('start');
+            sourceSquare = null;
             removeHighlights();
             updateUI();
             $('#score').text('0.00');
@@ -156,7 +177,7 @@
         function changeSide(side) {
             if (side === playerSide) return;
             if (game.history().length > 0 && !game.game_over()) {
-                if (!confirm("Game in progress. Changing sides will restart the game. Proceed?")) return;
+                if (!confirm("Changing sides restarts the game. Proceed?")) return;
             }
             playerSide = side;
             $('#btnWhite').toggleClass('active-side', side === 'w').toggleClass('btn-alt', side !== 'w');
@@ -165,9 +186,9 @@
         }
 
         function resign() {
-            if (confirm("Are you sure you want to resign?")) {
+            if (confirm("Resign the game?")) {
                 $('#status').text('You resigned.');
-                game.load('8/8/8/8/8/8/8/8 w - - 0 1'); // Simple way to 'stop' the game logic
+                game.load('8/8/8/8/8/8/8/8 w - - 0 1');
             }
         }
 
@@ -180,12 +201,27 @@
 
         $(document).ready(function() {
             board = Chessboard('board', {
-                draggable: true,
+                draggable: true, // משאיר אפשרות לגרירה למי שאוהב
                 position: 'start',
-                onDragStart: onDragStart,
-                onDrop: onDrop,
+                onDrop: function(source, target) {
+                    // עדכון לוגיקת הקליקים אם מישהו בכל זאת גרר
+                    sourceSquare = null;
+                    let move = game.move({ from: source, to: target, promotion: 'q' });
+                    if (move === null) return 'snapback';
+                    removeHighlights();
+                    highlightSquare(source, target);
+                    updateUI();
+                    window.setTimeout(askEngine, 250);
+                },
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
+
+            // הוספת אירוע לחיצה על משבצות הלוח
+            $('#board').on('click', '.square-55d63', function() {
+                let square = $(this).attr('data-square');
+                onSquareClick(square);
+            });
+
             updateUI();
         });
     </script>
