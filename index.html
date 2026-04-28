@@ -2,107 +2,103 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Netolink AI Lab</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #111; color: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; background: #1e1e1e; padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 40px; margin: 0; }
+        .container { display: flex; gap: 30px; background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 10px 50px rgba(0,0,0,0.7); }
         
-        /* לוח שחמט בסיסי וחסין */
-        .board-wrapper { display: grid; grid-template-columns: repeat(8, 50px); grid-template-rows: repeat(8, 50px); border: 5px solid #333; user-select: none; }
-        .square { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 40px; cursor: pointer; }
-        .white { background: #ebecd0; }
-        .black { background: #779556; }
+        /* הלוח נבנה ב-CSS טהור */
+        #board { display: grid; grid-template-columns: repeat(8, 55px); grid-template-rows: repeat(8, 55px); border: 4px solid #333; }
+        .sq { width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-size: 42px; cursor: pointer; transition: 0.1s; }
+        .w-sq { background: #eeeed2; }
+        .b-sq { background: #769656; }
         .selected { background: #f6f669 !important; }
+        .sq:hover { filter: brightness(1.1); }
 
-        .sidebar { width: 280px; display: flex; flex-direction: column; gap: 15px; }
-        .engine-box { background: #000; padding: 15px; border-radius: 8px; border-left: 4px solid #4af; }
-        .score { font-size: 2em; color: #4af; font-family: monospace; font-weight: bold; }
-        button { cursor: pointer; padding: 12px; background: #4af; color: #000; border: none; border-radius: 6px; font-weight: bold; font-size: 1em; }
-        button:hover { background: #6bc4ff; }
-        .status { font-size: 1.1em; font-weight: 600; }
+        .sidebar { width: 280px; display: flex; flex-direction: column; }
+        .engine-card { background: #000; padding: 20px; border-radius: 8px; border-left: 4px solid #4af; margin: 20px 0; }
+        .score { font-size: 2.2em; color: #4af; font-family: monospace; font-weight: bold; }
+        button { cursor: pointer; padding: 12px; background: #4af; color: #000; border: none; border-radius: 6px; font-weight: bold; margin-bottom: 10px; }
+        .best-line { color: #888; font-family: monospace; font-size: 0.85em; margin-top: 10px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-    <h1 style="margin-bottom: 20px;">Netolink <span style="color:#4af">AI Lab</span></h1>
+    <h1 style="font-weight: 300;">Netolink <span style="color:#4af; font-weight:800;">AI Lab</span></h1>
 
     <div class="container">
-        <div id="board" class="board-wrapper"></div>
+        <div id="board"></div>
 
         <div class="sidebar">
-            <div id="status" class="status">Your Turn</div>
-            <div class="engine-box">
-                <div style="font-size: 0.8em; color: #555;">EVALUATION</div>
+            <div id="status" style="font-weight: 600; font-size: 1.2em;">Ready to Play</div>
+            
+            <div class="engine-card">
+                <small style="color: #666; letter-spacing: 1px;">EVALUATION</small>
                 <div id="score" class="score">0.00</div>
-                <div id="bestLine" style="font-size: 0.8em; color: #888; margin-top: 10px; font-family: monospace;">---</div>
+                <div id="bestLine" class="best-line">Waiting for move...</div>
             </div>
+
             <button onclick="resetGame()">New Game</button>
-            <button style="background:#444; color:#ccc;" onclick="undoMove()">Undo Move</button>
+            <button style="background:#333; color:#ccc;" onclick="undoMove()">Undo</button>
         </div>
     </div>
 
     <script>
         const game = new Chess();
-        const boardEl = document.getElementById('board');
-        let selectedSquare = null;
+        const stockfish = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+        let selectedSq = null;
 
-        // מפת כלים לתווי יוניקוד (ככה אין תלות בתמונות חיצוניות שעלולות להיחסם)
-        const pieces = {
+        // הכלים הם תווים גרפיים - לא תמונות
+        const pieceMap = {
             'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
             'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
         };
 
-        const stockfish = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
-
-        function renderBoard() {
+        function drawBoard() {
+            const boardEl = document.getElementById('board');
             boardEl.innerHTML = '';
-            const board = game.board();
-            for (let i = 0; i < 8; i++) {
-                for (let j = 0; j < 8; j++) {
-                    const square = document.createElement('div');
-                    square.className = `square ${(i + j) % 2 === 0 ? 'white' : 'black'}`;
-                    square.dataset.pos = String.fromCharCode(97 + j) + (8 - i);
+            const position = game.board();
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const sq = document.createElement('div');
+                    const pos = String.fromCharCode(97 + c) + (8 - r);
+                    sq.className = `sq ${(r + c) % 2 === 0 ? 'w-sq' : 'b-sq'}`;
+                    if (selectedSq === pos) sq.classList.add('selected');
                     
-                    if (selectedSquare === square.dataset.pos) square.classList.add('selected');
-                    
-                    const piece = board[i][j];
+                    const piece = position[r][c];
                     if (piece) {
-                        square.textContent = pieces[piece.color === 'w' ? piece.type.toUpperCase() : piece.type];
-                        square.style.color = piece.color === 'w' ? '#fff' : '#000';
+                        sq.textContent = pieceMap[piece.color === 'w' ? piece.type.toUpperCase() : piece.type];
+                        sq.style.color = piece.color === 'w' ? '#fff' : '#000';
                     }
-                    
-                    square.onclick = () => handleSquareClick(square.dataset.pos);
-                    boardEl.appendChild(square);
+
+                    sq.onclick = () => {
+                        if (game.turn() === 'b') return;
+                        if (selectedSq === pos) {
+                            selectedSq = null;
+                        } else if (selectedSq) {
+                            const move = game.move({ from: selectedSq, to: pos, promotion: 'q' });
+                            selectedSq = null;
+                            if (move) {
+                                drawBoard();
+                                document.getElementById('status').textContent = 'Engine Thinking...';
+                                askEngine();
+                            }
+                        } else {
+                            const p = game.get(pos);
+                            if (p && p.color === 'w') selectedSq = pos;
+                        }
+                        drawBoard();
+                    };
+                    boardEl.appendChild(sq);
                 }
             }
         }
 
-        function handleSquareClick(pos) {
-            if (game.turn() === 'b' || game.game_over()) return;
-
-            if (selectedSquare === pos) {
-                selectedSquare = null;
-            } else if (selectedSquare) {
-                const move = game.move({ from: selectedSquare, to: pos, promotion: 'q' });
-                selectedSquare = null;
-                if (move) {
-                    renderBoard();
-                    updateStatus();
-                    setTimeout(askStockfish, 250);
-                }
-            } else {
-                const piece = game.get(pos);
-                if (piece && piece.color === 'w') selectedSquare = pos;
-            }
-            renderBoard();
-        }
-
-        function askStockfish() {
+        function askEngine() {
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage('go depth 12');
-            
             stockfish.onmessage = (e) => {
                 const msg = e.data;
                 if (msg.includes('score cp')) {
@@ -116,23 +112,17 @@
                     const m = msg.split('bestmove ')[1].split(' ')[0];
                     if (m && m !== '(none)') {
                         game.move({ from: m.substring(0,2), to: m.substring(2,4), promotion: 'q' });
-                        renderBoard();
-                        updateStatus();
+                        drawBoard();
+                        document.getElementById('status').textContent = 'Your Turn';
                     }
                 }
             };
         }
 
-        function updateStatus() {
-            let s = game.turn() === 'w' ? 'Your Turn' : 'Engine Thinking...';
-            if (game.in_checkmate()) s = 'Checkmate!';
-            document.getElementById('status').textContent = s;
-        }
+        function resetGame() { game.reset(); drawBoard(); document.getElementById('status').textContent = 'Ready'; }
+        function undoMove() { game.undo(); game.undo(); drawBoard(); }
 
-        function resetGame() { game.reset(); renderBoard(); updateStatus(); }
-        function undoMove() { game.undo(); game.undo(); renderBoard(); updateStatus(); }
-
-        renderBoard();
+        drawBoard();
     </script>
 </body>
 </html>
