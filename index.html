@@ -414,17 +414,6 @@
 
         function undoMove() { game.undo(); game.undo(); board.position(game.fen(), true); removeHighlights(); updateUI(); }
         function resign() { if (confirm("Resign?")) { alert("You resigned."); resetGame(); } }
-
-        $(document).ready(function () {
-            board = Chessboard('board', {
-                draggable: true, // החזרנו את הגרירה!
-                position: 'start',
-                onDrop: onDrop, // פונקציה שמטפלת בסיום הגרירה
-                moveSpeed: 'fast',
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-            });
-            updateUI();
-        });
     </script>
 </body>
 
