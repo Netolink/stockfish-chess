@@ -64,7 +64,7 @@
         let board = null;
         let playerSide = 'w';
         let sourceSquare = null;
-        const stockfish = new Worker('stockfish-18-lite-single.js');
+        const stockfish = new Worker('stockfish-18-lite-single.js?v=999');
 
         function generateClickCatcher() {
             const catcher = document.getElementById('click-catcher');
