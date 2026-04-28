@@ -136,6 +136,11 @@
             color: #4af;
             margin-left: 5px;
         }
+
+        /* הוסף את זה ב-CSS */
+        .square-55d63 {
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -253,16 +258,25 @@
             setTimeout(askEngine, 250);
         }
 
-        // אתחול הלוח ב-$(document).ready
         $(document).ready(function () {
             board = Chessboard('board', {
                 draggable: true,
                 position: 'start',
                 onDrop: onDrop,
-                onSquareClick: onSquareClick, // חיבור הפונקציה החדשה
+                onDragStart: function () {
+                    removeHighlights();
+                    sourceSquare = null;
+                },
                 moveSpeed: 'fast',
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
+
+            // פתרון Netolink ללחיצות: האזנה ישירה למשבצות הלוח
+            $('#board').on('click', '.square-55d63', function () {
+                let square = $(this).data('square');
+                onSquareClick(square);
+            });
+
             updateUI();
         });
 
