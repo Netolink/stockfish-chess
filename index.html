@@ -233,17 +233,18 @@
 
         function askEngine() {
             if (game.game_over()) return;
-            $('#status').text('Stockfish thinking (Classical)...');
+
+            $('#status').text('Stockfish 18 (Neural) is thinking...');
 
             stockfish.postMessage('uci');
             stockfish.postMessage('setoption name Threads value 1');
             stockfish.postMessage('setoption name Hash value 128');
 
-            // נטרול ה-NNUE לבדיקה
-            stockfish.postMessage('setoption name Use NNUE value false');
+            // השארנו את זה על true כי המנוע תומך בזה פנימית, אבל ויתרנו על הפנייה לקובץ החיצוני
+            stockfish.postMessage('setoption name Use NNUE value true');
 
             stockfish.postMessage(`position fen ${game.fen()}`);
-            stockfish.postMessage('go depth 12'); // עומק נמוך יותר לבדיקה מהירה
+            stockfish.postMessage('go depth 18');
         }
 
         stockfish.onmessage = function (event) {
