@@ -5,79 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Netolink AI Lab</title>
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     
     <style>
-        body { 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            background: #121212; 
-            color: #e0e0e0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 40px 20px; 
-            margin: 0; 
-            min-height: 100vh;
-        }
-        .container { 
-            display: flex; 
-            gap: 40px; 
-            max-width: 1100px; 
-            width: 100%; 
-            justify-content: center; 
-            flex-wrap: wrap; 
-            margin-top: 30px; 
-        }
-        #board { 
-            width: 450px; 
-            max-width: 95vw; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6); 
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .sidebar { 
-            flex: 1; 
-            min-width: 340px; 
-            background: #1e1e1e; 
-            padding: 30px; 
-            border-radius: 16px; 
-            border: 1px solid #333; 
-        }
-        .engine-info { 
-            background: #0a0a0a; 
-            padding: 20px; 
-            border-radius: 12px; 
-            border-left: 4px solid #4af; 
-            margin: 20px 0; 
-        }
-        .score { 
-            font-size: 2.2em; 
-            font-weight: 700; 
-            color: #4af; 
-            font-family: 'Consolas', monospace; 
-        }
-        .best-line { 
-            font-family: 'Courier New', monospace; 
-            color: #888; 
-            direction: ltr; 
-            text-align: left; 
-            margin-top: 12px; 
-            background: #161616; 
-            padding: 12px; 
-            border-radius: 6px;
-            min-height: 20px;
-        }
-        .controls { display: flex; gap: 12px; margin-top: 20px; }
-        button { 
-            flex: 1; cursor: pointer; padding: 14px; 
-            background: #4af; color: #000; border: none; 
-            border-radius: 8px; font-weight: 700; font-size: 15px; 
-            transition: all 0.2s; 
-        }
-        button:hover { background: #6bc4ff; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f0f; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; margin: 0; min-height: 100vh; }
+        .container { display: flex; gap: 30px; max-width: 1000px; width: 100%; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        #board { width: 450px; max-width: 90vw; box-shadow: 0 0 40px rgba(0,0,0,0.8); border: 1px solid #333; }
+        .sidebar { flex: 1; min-width: 320px; background: #1a1a1a; padding: 25px; border-radius: 12px; border: 1px solid #333; display: flex; flex-direction: column; }
+        .engine-info { background: #050505; padding: 20px; border-radius: 8px; border-left: 4px solid #4af; margin: 20px 0; }
+        .score { font-size: 2em; font-weight: bold; color: #4af; font-family: monospace; }
+        .best-line { font-family: 'Courier New', monospace; color: #777; direction: ltr; text-align: left; margin-top: 10px; background: #111; padding: 10px; border-radius: 4px; font-size: 0.9em; }
+        .controls { display: flex; gap: 10px; margin-top: auto; }
+        button { flex: 1; cursor: pointer; padding: 12px; background: #4af; color: #000; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #358ccb; }
         button#undoBtn { background: #333; color: #ccc; }
-        .label { color: #666; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
-        h1 { margin: 0; font-weight: 300; font-size: 2.5em; }
+        .label { color: #555; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { margin: 0; font-weight: 300; }
         h1 span { font-weight: 800; color: #4af; }
     </style>
 </head>
@@ -87,16 +30,15 @@
 
     <div class="container">
         <div id="board"></div>
-
         <div class="sidebar">
-            <div class="label">Current Status</div>
-            <div id="status" style="font-size: 1.4em; font-weight: 600; margin-bottom: 20px;">Ready to play</div>
+            <div class="label">Status</div>
+            <div id="status" style="font-size: 1.2em; font-weight: 600; margin-bottom: 5px;">Initializing...</div>
 
             <div class="engine-info">
-                <div class="label">Engine Evaluation</div>
+                <div class="label">Evaluation</div>
                 <div id="score" class="score">0.00</div>
-                <div class="label" style="margin-top:20px;">Predicted Line</div>
-                <div class="best-line" id="bestLine">Waiting for move...</div>
+                <div class="label" style="margin-top:15px;">Best Move Sequence</div>
+                <div class="best-line" id="bestLine">Waiting...</div>
             </div>
 
             <div class="controls">
@@ -106,9 +48,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
 
     <script>
         var board = null;
@@ -130,7 +72,6 @@
         function askStockfish() {
             stockfish.postMessage('position fen ' + game.fen());
             stockfish.postMessage('go depth 12');
-            
             stockfish.onmessage = function(event) {
                 var msg = event.data;
                 if (msg.includes('score cp')) {
@@ -143,7 +84,7 @@
                 }
                 if (msg.includes('bestmove')) {
                     var best = msg.split(' ')[1];
-                    if (best !== '(none)') {
+                    if (best && best !== '(none)') {
                         game.move({ from: best.substring(0, 2), to: best.substring(2, 4), promotion: 'q' });
                         board.position(game.fen());
                         updateStatus();
@@ -160,11 +101,8 @@
         }
 
         function resetGame() {
-            game.reset();
-            board.start();
-            updateStatus();
-            $('#score').text('0.00');
-            $('#bestLine').text('Waiting for move...');
+            game.reset(); board.start(); updateStatus();
+            $('#score').text('0.00'); $('#bestLine').text('Waiting...');
         }
 
         function undoMove() {
@@ -173,15 +111,24 @@
             updateStatus();
         }
 
-        // The critical initialization
+        // Using official Wikimedia SVG pieces - high reliability
+        function pieceTheme (piece) {
+            return 'https://upload.wikimedia.org/wikipedia/commons/' +
+                {
+                    bK: 'f/f0/Chess_kdt45.svg', bQ: '4/47/Chess_qdt45.svg', bR: 'f/ff/Chess_rdt45.svg',
+                    bB: '9/98/Chess_bdt45.svg', bN: 'e/ef/Chess_ndt45.svg', bP: 'c/c7/Chess_pdt45.svg',
+                    wK: '4/42/Chess_klt45.svg', wQ: '1/15/Chess_qlt45.svg', wR: '7/72/Chess_rlt45.svg',
+                    wB: 'b/b1/Chess_blt45.svg', wN: '7/70/Chess_nlt45.svg', wP: '4/45/Chess_plt45.svg'
+                }[piece];
+        }
+
         $(document).ready(function() {
             board = Chessboard('board', {
                 draggable: true,
                 position: 'start',
                 onDragStart: onDragStart,
                 onDrop: onDrop,
-                // Using a more reliable piece theme source
-                pieceTheme: 'https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png'
+                pieceTheme: pieceTheme
             });
             updateStatus();
         });
