@@ -259,31 +259,46 @@
         }
 
         $(document).ready(function () {
-            // 1. אתחול הלוח
+            // 1. אתחול הלוח עם הגדרות חכמות
             board = Chessboard('board', {
                 draggable: true,
                 position: 'start',
-                onDrop: onDrop,
-                onDragStart: function () {
-                    removeHighlights();
+                // כשמתחילים לגרור או לוחצים לחיצה ארוכה
+                onDragStart: function (source, piece, position, orientation) {
+                    if (game.game_over() || piece.search(new RegExp(`^${playerSide}`)) === -1) return false;
+
+                    // לוגיקת לחיצה: אם לחצנו על אותו כלי - בטל בחירה. אם על כלי אחר - סמן אותו.
+                    if (sourceSquare === source) {
+                        sourceSquare = null;
+                        removeHighlights();
+                    } else {
+                        sourceSquare = source;
+                        highlight(source);
+                    }
+                },
+                // כשמשחררים את הכלי (גרירה או לחיצה על יעד)
+                onDrop: function (source, target) {
+                    // אם זה אותו ריבוע (לחיצה במקום), אל תעשה כלום, תשאיר את הסימון
+                    if (source === target) return;
+
+                    let move = game.move({ from: source, to: target, promotion: 'q' });
+                    if (move === null) return 'snapback';
+
                     sourceSquare = null;
+                    removeHighlights();
+                    highlightLastMove(source, target);
+                    updateUI();
+                    setTimeout(askEngine, 250);
                 },
                 moveSpeed: 'fast',
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
 
-            // פתרון Netolink: שימוש ב-mousedown במקום click כדי לעקוף את מנגנון הגרירה
-            $(document).on('mousedown', '#board [class*="square-"]', function (e) {
-                // חילוץ שם המשבצת מהקלאס (למשל square-e4)
-                let classList = $(this).attr('class').split(/\s+/);
-                let squareClass = classList.find(c => c.startsWith('square-'));
-
-                if (squareClass) {
-                    let square = squareClass.split('-')[1];
-                    // אנחנו קוראים לפונקציה רק אם זו לחיצה שמאלית
-                    if (e.which === 1) {
-                        onSquareClick(square);
-                    }
+            // 2. תמיכה בלחיצה על משבצת ריקה (כדי להשלים מהלך בלחיצה-קליק)
+            $('#board').on('click', '.square-55d63', function () {
+                let square = $(this).data('square');
+                if (sourceSquare && sourceSquare !== square) {
+                    onSquareClick(square);
                 }
             });
 
