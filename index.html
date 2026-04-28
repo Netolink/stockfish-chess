@@ -64,7 +64,7 @@
         let board = null;
         let playerSide = 'w';
         let sourceSquare = null;
-        const stockfish = new Worker('stockfish.js');
+        const stockfish = new Worker('stockfish-18-lite.js');
 
         function generateClickCatcher() {
             const catcher = document.getElementById('click-catcher');
@@ -112,14 +112,21 @@
             }
         }
 
-        function askEngine() {
-            if (game.game_over()) return;
-            $('#status').text('Thinking...');
-            stockfish.postMessage('setoption name Threads value 4');
-            stockfish.postMessage('setoption name Hash value 128');
-            stockfish.postMessage(`position fen ${game.fen()}`);
-            stockfish.postMessage('go depth 18');
-        }
+function askEngine() {
+    if (game.game_over()) return;
+    $('#status').text('Stockfish 18 (Neural) Thinking...');
+    
+    // הגדרות כוח
+    stockfish.postMessage('setoption name Threads value 4');
+    stockfish.postMessage('setoption name Hash value 128');
+
+    // השורות החדשות שחובה להוסיף:
+    stockfish.postMessage('setoption name Use NNUE value true');
+    stockfish.postMessage('setoption name EvalFile value stockfish.nnue');
+
+    stockfish.postMessage(`position fen ${game.fen()}`);
+    stockfish.postMessage('go depth 18');
+}
 
         stockfish.onmessage = (e) => {
             let msg = e.data;
