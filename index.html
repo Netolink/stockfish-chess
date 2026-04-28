@@ -272,16 +272,18 @@
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
 
-            // 2. פתרון Netolink: האזנה חכמה ללחיצות (Event Delegation)
-            // זה יעבוד גם אם הלוח נבנה מחדש או מתהפך
-            $(document).on('click', '#board [class*="square-"]', function () {
-                // חילוץ שם המשבצת מתוך הקלאס (למשל square-e4)
+            // פתרון Netolink: שימוש ב-mousedown במקום click כדי לעקוף את מנגנון הגרירה
+            $(document).on('mousedown', '#board [class*="square-"]', function (e) {
+                // חילוץ שם המשבצת מהקלאס (למשל square-e4)
                 let classList = $(this).attr('class').split(/\s+/);
-                let squareClass = classList.find(c => c.startsWith('square-') && c.length === 9);
+                let squareClass = classList.find(c => c.startsWith('square-'));
 
                 if (squareClass) {
                     let square = squareClass.split('-')[1];
-                    onSquareClick(square);
+                    // אנחנו קוראים לפונקציה רק אם זו לחיצה שמאלית
+                    if (e.which === 1) {
+                        onSquareClick(square);
+                    }
                 }
             });
 
