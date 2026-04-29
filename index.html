@@ -397,10 +397,10 @@
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
             stockfish.postMessage('uci');
-            // הוספת גיוון: המנוע יבחן את 5 המהלכים הכי טובים
-            stockfish.postMessage('setoption name MultiPV value 5');
+            // הוספת גיוון: המנוע יבחן את 3 המהלכים הכי טובים
+            stockfish.postMessage('setoption name MultiPV value 3');
             // עומק ומהירות חישוב
-            stockfish.postMessage('setoption name Threads value 2');
+            stockfish.postMessage('setoption name Threads value 1');
             stockfish.postMessage('setoption name Hash value 128');
             stockfish.postMessage('setoption name Use NNUE value true');
 
