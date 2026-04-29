@@ -159,9 +159,10 @@
             cursor: pointer;
         }
 
-        /* תיקון נקודות המהלכים - רק נקודה ללא רקע כהה */
         .highlight-hint {
-            background: radial-gradient(rgba(0, 0, 0, 0.15) 20%, transparent 25%) !important;
+            /* ציור נקודה קטנה במרכז המשבצת ללא שינוי צבע הרקע שלה */
+            background-image: radial-gradient(circle, rgba(0, 0, 0, 0.2) 15%, transparent 15%) !important;
+            background-color: transparent !important;
         }
 
         /* סימון שח למלך (הילה אדומה מסביב למשבצת) */
