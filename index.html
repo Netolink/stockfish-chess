@@ -160,9 +160,23 @@
         }
 
         .highlight-hint {
-            /* ציור נקודה קטנה במרכז המשבצת ללא שינוי צבע הרקע שלה */
-            background-image: radial-gradient(circle, rgba(0, 0, 0, 0.2) 15%, transparent 15%) !important;
-            background-color: transparent !important;
+            position: relative;
+        }
+
+        .highlight-hint::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20%;
+            /* גודל הנקודה */
+            height: 20%;
+            background: rgba(0, 0, 0, 0.2);
+            /* צבע הנקודה */
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
         }
 
         /* סימון שח למלך (הילה אדומה מסביב למשבצת) */
@@ -317,6 +331,9 @@
                 position: 'start',
                 // כשמתחילים לגרור או לוחצים לחיצה ארוכה
                 onDragStart: function (source, piece, position, orientation) {
+                    // מונע מהלכים בלחצן ימני או גלגלת
+                    if (window.event && window.event.which !== 1) return false;
+                    
                     if (game.game_over() || piece.search(new RegExp(`^${playerSide}`)) === -1) return false;
 
                     // לוגיקת לחיצה: אם לחצנו על אותו כלי - בטל בחירה. אם על כלי אחר - סמן אותו.
@@ -346,8 +363,11 @@
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
 
-            // 2. תמיכה בלחיצה על משבצת ריקה (כדי להשלים מהלך בלחיצה-קליק)
-            $('#board').on('click', '.square-55d63', function () {
+            // תמיכה בלחיצה שמאלית בלבד להשלמת מהלך
+            $('#board').on('mousedown', '.square-55d63', function (e) {
+                // בדיקה: 1 = כפתור שמאלי. כל כפתור אחר (2 גלגלת, 3 ימני) יתעלם.
+                if (e.which !== 1) return;
+
                 let square = $(this).data('square');
                 if (sourceSquare && sourceSquare !== square) {
                     onSquareClick(square);
