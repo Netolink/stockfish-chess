@@ -118,23 +118,34 @@
             color: white;
         }
 
+        /* תיקון הכלים האכולים - קטנים יותר ומסודרים */
         .captured-pieces {
             display: flex;
+            flex-wrap: wrap;
+            /* מאפשר לכלים לרדת שורה אם יש הרבה */
             align-items: center;
             gap: 2px;
-            min-height: 25px;
+            min-height: 30px;
             margin-top: 5px;
-            padding: 5px;
+            padding: 8px;
             background: #252525;
-            /* רקע בהיר יותר מהשחור של הממשק */
-            border-radius: 4px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .captured-pieces img {
+            height: 18px;
+            /* הקטנה משמעותית של הכלים */
+            width: auto;
+            opacity: 0.9;
         }
 
         .advantage-tag {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            color: #888;
-            margin-left: 8px;
+            color: #aaa;
+            margin-left: 5px;
+            font-family: monospace;
         }
 
         .advantage-score {
@@ -148,9 +159,9 @@
             cursor: pointer;
         }
 
-        /* סימון מהלכים חוקיים (נקודה שקופה במרכז המשבצת) */
+        /* תיקון נקודות המהלכים - רק נקודה ללא רקע כהה */
         .highlight-hint {
-            background: radial-gradient(rgba(0, 0, 0, 0.2) 25%, transparent 25%) !important;
+            background: radial-gradient(rgba(0, 0, 0, 0.15) 20%, transparent 25%) !important;
         }
 
         /* סימון שח למלך (הילה אדומה מסביב למשבצת) */
@@ -469,6 +480,7 @@
         }
         function highlightLastMove(f, t) { $(`#board .square-${f}, #board .square-${t}`).addClass('highlight-last-move'); }
         function removeHighlights() {
+            // הסרה של כל הקלאסים של הסימונים מהלוח
             $('#board [class*="square-"]').removeClass('highlight-selected highlight-last-move highlight-hint highlight-check');
         }
 
