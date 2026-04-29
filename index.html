@@ -346,22 +346,20 @@
                         highlight(source);
                     }
                 },
-                // טיפול בביצוע המהלך (גרירה או קליק-קליק)
                 onDrop: function (source, target) {
                     if (source === target) return;
 
                     let move = game.move({ from: source, to: target, promotion: 'q' });
+
+                    // אם המהלך לא חוקי - מחזירים את הכלי למקור (snapback)
                     if (move === null) return 'snapback';
 
-                    // בתוך onDrop ובתוך onSquareClick - החלף את הבלוק הרלוונטי:
-                    board.position(game.fen(), true); // true מבצע אנימציה חכמה שמנסה להזיז הכל יחד
-
+                    // לא מפעילים כאן board.position כדי למנוע כפילות ויזואלית בגרירה
                     sourceSquare = null;
                     removeHighlights();
                     highlightLastMove(source, target);
                     updateUI();
 
-                    // עכשיו אפשר להחזיר לזמן תגובה מהיר בהרבה
                     setTimeout(askEngine, 300);
                 },
                 moveSpeed: 'fast',
