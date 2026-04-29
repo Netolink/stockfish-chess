@@ -120,15 +120,21 @@
 
         .captured-pieces {
             display: flex;
+            align-items: center;
             gap: 2px;
-            height: 20px;
+            min-height: 25px;
             margin-top: 5px;
-            font-size: 14px;
+            padding: 5px;
+            background: #252525;
+            /* רקע בהיר יותר מהשחור של הממשק */
+            border-radius: 4px;
         }
 
-        .captured-pieces img {
-            height: 20px;
-            opacity: 0.8;
+        .advantage-tag {
+            font-size: 12px;
+            font-weight: bold;
+            color: #888;
+            margin-left: 8px;
         }
 
         .advantage-score {
@@ -144,8 +150,7 @@
 
         /* סימון מהלכים חוקיים (נקודה שקופה במרכז המשבצת) */
         .highlight-hint {
-            background: radial-gradient(rgba(0, 0, 0, 0.1) 19%, transparent 20%);
-            background-size: 100% 100%;
+            background: radial-gradient(rgba(0, 0, 0, 0.2) 25%, transparent 25%) !important;
         }
 
         /* סימון שח למלך (הילה אדומה מסביב למשבצת) */
@@ -414,39 +419,41 @@
                 'P': 8, 'N': 2, 'B': 2, 'R': 2, 'Q': 1
             };
 
-            // ספירת כלים קיימים על הלוח
             for (let char of fen.split(' ')[0]) {
                 if (pieces[char] !== undefined) pieces[char]--;
             }
 
-            const whiteCapturedDiv = $('#white-captured');
-            const blackCapturedDiv = $('#black-captured');
-            whiteCapturedDiv.empty();
-            blackCapturedDiv.empty();
+            const whiteCapturedDiv = $('#white-captured').empty();
+            const blackCapturedDiv = $('#black-captured').empty();
 
-            // הגדרת סמלים וערכים
             const symbolMap = { 'p': 'p', 'n': 'n', 'b': 'b', 'r': 'r', 'q': 'q' };
             const valueMap = { 'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9 };
 
-            let whiteValue = 0;
-            let blackValue = 0;
+            let whiteScore = 0;
+            let blackScore = 0;
 
-            // הצגת כלים ששחור אכל ללבן (יופיעו ליד שחור)
+            // כלים שחורים שאכל הלבן (מחושב עבור יתרון לבן)
             for (let p in symbolMap) {
-                let count = pieces[p.toUpperCase()]; // כלים לבנים חסרים
-                for (let i = 0; i < count; i++) {
-                    blackCapturedDiv.append(`<img src="https://chessboardjs.com/img/chesspieces/wikipedia/w${symbolMap[p].toUpperCase()}.png">`);
-                    blackValue -= valueMap[p];
+                for (let i = 0; i < pieces[p]; i++) {
+                    whiteCapturedDiv.append(`<img src="https://chessboardjs.com/img/chesspieces/wikipedia/b${symbolMap[p].toUpperCase()}.png">`);
+                    whiteScore += valueMap[p];
                 }
             }
 
-            // הצגת כלים שלבן אכל לשחור (יופיעו ליד לבן)
+            // כלים לבנים שאכל השחור (מחושב עבור יתרון שחור)
             for (let p in symbolMap) {
-                let count = pieces[p]; // כלים שחורים חסרים
-                for (let i = 0; i < count; i++) {
-                    whiteCapturedDiv.append(`<img src="https://chessboardjs.com/img/chesspieces/wikipedia/b${symbolMap[p].toUpperCase()}.png">`);
-                    whiteValue += valueMap[p];
+                for (let i = 0; i < pieces[p.toUpperCase()]; i++) {
+                    blackCapturedDiv.append(`<img src="https://chessboardjs.com/img/chesspieces/wikipedia/w${symbolMap[p].toUpperCase()}.png">`);
+                    blackScore += valueMap[p];
                 }
+            }
+
+            // הצגת הפרש הנקודות
+            const diff = whiteScore - blackScore;
+            if (diff > 0) {
+                whiteCapturedDiv.append(`<span class="advantage-tag">+${diff}</span>`);
+            } else if (diff < 0) {
+                blackCapturedDiv.append(`<span class="advantage-tag">+${Math.abs(diff)}</span>`);
             }
         }
 
