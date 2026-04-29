@@ -350,11 +350,12 @@
                     if (source === target) return;
 
                     let move = game.move({ from: source, to: target, promotion: 'q' });
-
-                    // אם המהלך לא חוקי - מחזירים את הכלי למקור (snapback)
                     if (move === null) return 'snapback';
 
-                    // לא מפעילים כאן board.position כדי למנוע כפילות ויזואלית בגרירה
+                    // הפתרון המנצח: עדכון המיקום ללא אנימציה (מכיוון שהשחקן כבר גרר)
+                    // זה יגרום לצריח להופיע מיידית במקומו בלי השהיה ובלי כפל כלים
+                    board.position(game.fen(), false);
+
                     sourceSquare = null;
                     removeHighlights();
                     highlightLastMove(source, target);
@@ -396,10 +397,11 @@
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
             stockfish.postMessage('uci');
-            stockfish.postMessage('setoption name Threads value 1');
+            // הוספת גיוון: המנוע יבחן את 5 המהלכים הכי טובים
+            stockfish.postMessage('setoption name MultiPV value 5');
+            // עומק ומהירות חישוב
+            stockfish.postMessage('setoption name Threads value 2');
             stockfish.postMessage('setoption name Hash value 128');
-
-            // השארנו את זה על true כי המנוע תומך בזה פנימית, אבל ויתרנו על הפנייה לקובץ החיצוני
             stockfish.postMessage('setoption name Use NNUE value true');
 
             stockfish.postMessage(`position fen ${game.fen()}`);
