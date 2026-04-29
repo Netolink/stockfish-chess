@@ -294,13 +294,13 @@
                     }
                 } else {
                     // מהלך חוקי בוצע בלחיצה
-                    board.position(game.fen());
+                    board.position(game.fen()); // עדכון מיידי של הלוח
                     let from = sourceSquare;
                     sourceSquare = null;
                     removeHighlights();
                     highlightLastMove(from, square);
                     updateUI();
-                    setTimeout(askEngine, 500);
+                    setTimeout(askEngine, 600); // השהיה מספקת
                 }
             } else {
                 // בחירת כלי ראשונית
@@ -353,12 +353,14 @@
                     let move = game.move({ from: source, to: target, promotion: 'q' });
                     if (move === null) return 'snapback';
 
+                    board.position(game.fen());
+
                     sourceSquare = null;
                     removeHighlights();
                     highlightLastMove(source, target);
                     updateUI();
                     // הערה: מחקנו מכאן את ה-setTimeout(askEngine) כדי למנוע כפילות עם onMoveEnd
-                    setTimeout(askEngine, 500);
+                    setTimeout(askEngine, 600);
                 },
                 moveSpeed: 'fast',
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
