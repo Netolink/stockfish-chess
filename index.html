@@ -300,7 +300,7 @@
                     removeHighlights();
                     highlightLastMove(from, square);
                     updateUI();
-                    setTimeout(askEngine, 250);
+                    //setTimeout(askEngine, 250);
                 }
             } else {
                 // בחירת כלי ראשונית
@@ -321,22 +321,23 @@
             removeHighlights();
             highlightLastMove(source, target);
             updateUI();
-            setTimeout(askEngine, 250);
+            //setTimeout(askEngine, 250);
         }
 
         $(document).ready(function () {
-            // 1. אתחול הלוח עם הגדרות חכמות
+            // אתחול הלוח המאוחד של Netolink
             board = Chessboard('board', {
                 draggable: true,
                 position: 'start',
-                // כשמתחילים לגרור או לוחצים לחיצה ארוכה
+                // טיפול בתחילת גרירה/לחיצה
                 onDragStart: function (source, piece, position, orientation) {
-                    // מונע מהלכים בלחצן ימני או גלגלת
+                    // 1. הגבלה לכפתור שמאלי בלבד
                     if (window.event && window.event.which !== 1) return false;
-                    
+
+                    // 2. מניעת הזזת כלי יריב או סיום משחק
                     if (game.game_over() || piece.search(new RegExp(`^${playerSide}`)) === -1) return false;
 
-                    // לוגיקת לחיצה: אם לחצנו על אותו כלי - בטל בחירה. אם על כלי אחר - סמן אותו.
+                    // 3. לוגיקת סימון (Highlight)
                     if (sourceSquare === source) {
                         sourceSquare = null;
                         removeHighlights();
@@ -345,9 +346,8 @@
                         highlight(source);
                     }
                 },
-                // כשמשחררים את הכלי (גרירה או לחיצה על יעד)
+                // טיפול בביצוע המהלך (גרירה או קליק-קליק)
                 onDrop: function (source, target) {
-                    // אם זה אותו ריבוע (לחיצה במקום), אל תעשה כלום, תשאיר את הסימון
                     if (source === target) return;
 
                     let move = game.move({ from: source, to: target, promotion: 'q' });
@@ -357,15 +357,20 @@
                     removeHighlights();
                     highlightLastMove(source, target);
                     updateUI();
-                    setTimeout(askEngine, 250);
+                    // הערה: מחקנו מכאן את ה-setTimeout(askEngine) כדי למנוע כפילות עם onMoveEnd
+                },
+                // הפתרון להצרחה: קריאה למנוע רק כשכל האנימציות הסתיימו
+                onMoveEnd: function () {
+                    if (game.turn() !== playerSide && !game.game_over()) {
+                        askEngine();
+                    }
                 },
                 moveSpeed: 'fast',
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
 
-            // תמיכה בלחיצה שמאלית בלבד להשלמת מהלך
+            // תמיכה בהשלמת מהלך בלחיצה על משבצת יעד (קליק-קליק)
             $('#board').on('mousedown', '.square-55d63', function (e) {
-                // בדיקה: 1 = כפתור שמאלי. כל כפתור אחר (2 גלגלת, 3 ימני) יתעלם.
                 if (e.which !== 1) return;
 
                 let square = $(this).data('square');
