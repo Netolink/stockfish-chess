@@ -253,6 +253,20 @@
         </div>
     </div>
 
+    <div id="promotion-modal"
+        style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
+        <div
+            style="background: #1e1e1e; padding: 25px; border-radius: 12px; text-align: center; border: 2px solid #4facfe;">
+            <h3 style="color: white; margin-bottom: 20px; font-family: sans-serif;">בחר כלי להכתרה</h3>
+            <div id="promotion-options" style="display: flex; gap: 20px;">
+                <img data-piece="q" style="width: 75px; cursor: pointer;">
+                <img data-piece="r" style="width: 75px; cursor: pointer;">
+                <img data-piece="b" style="width: 75px; cursor: pointer;">
+                <img data-piece="n" style="width: 75px; cursor: pointer;">
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
@@ -363,8 +377,28 @@
                     let moveOptions = { from: source, to: target, promotion: 'q' };
 
                     if (isPromotion) {
-                        const promo = prompt("Promote to: (q)ueen, (r)ook, (b)ishop, or (k)night?", "q");
-                        moveOptions.promotion = ['q', 'r', 'b', 'n'].includes(promo?.toLowerCase()) ? promo.toLowerCase() : 'q';
+                        const colorChar = piece.color; // 'w' ללבן, 'b' לשחור
+                        const baseUrl = 'https://chessboardjs.com/img/chesspieces/wikipedia/';
+
+                        // עדכון אוטומטי של התמונות בחלונית לפי צבע השחקן
+                        $('#promotion-options img').each(function () {
+                            const pieceType = $(this).data('piece').toUpperCase();
+                            // בניית כתובת מוחלטת: למשל https://.../wQ.png
+                            $(this).attr('src', `${baseUrl}${colorChar}${pieceType}.png`);
+                        });
+
+                        $('#promotion-modal').css('display', 'flex');
+
+                        $('#promotion-options img').off('click').on('click', function () {
+                            const selectedPiece = $(this).data('piece');
+                            $('#promotion-modal').hide();
+
+                            game.move({ from: source, to: target, promotion: selectedPiece });
+                            board.position(game.fen(), false);
+
+                            completeMove(source, target);
+                        });
+                        return;
                     }
 
                     let move = game.move(moveOptions);
