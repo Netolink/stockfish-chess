@@ -618,8 +618,16 @@
         }
 
         function resetGame() {
-            game.reset(); board.orientation(playerSide === 'w' ? 'white' : 'black');
-            board.position('start'); sourceSquare = null; removeHighlights(); updateUI();
+            game.reset();
+            board.orientation(playerSide === 'w' ? 'white' : 'black');
+            board.position('start');
+
+            $('#game-over-overlay').hide(); // הסתרת הודעת המט
+
+            sourceSquare = null;
+            removeHighlights();
+            updateUI();
+
             $('#score').text('0.00');
             if (playerSide === 'b') askEngine();
         }
@@ -627,6 +635,9 @@
         function undoMove() {
             // 1. הטיפ הקריטי: אומרים למנוע להפסיק לחשב מיד כדי למנוע תקיעה
             stockfish.postMessage('stop');
+
+            // הסתרת הודעת המט אם הייתה קיימת
+            $('#game-over-overlay').hide();
 
             // 2. בדיקה: האם המחשב באמצע המחשבה (כלומר לא תור השחקן)?
             if (game.turn() !== playerSide) {
@@ -650,10 +661,17 @@
         function resign() { if (confirm("Resign?")) { alert("You resigned."); resetGame(); } }
 
         function rematch() {
+            // 1. הסתרה מיידית של שכבת סיום המשחק
             $('#game-over-overlay').hide();
-            // החלפת צד: אם היית לבן תהיה שחור, וההפך
+
+            // 2. עצירה של המנוע כדי שלא ינסה לחשב מהלכים מהמשחק שנגמר
+            stockfish.postMessage('stop');
+
+            // 3. החלפת צד והתחלה מחדש
+            // הפונקציה changeSide כבר קוראת ל-resetGame, שמנקה את הלוח והסטטוס
             changeSide(playerSide === 'w' ? 'b' : 'w');
         }
+
     </script>
 </body>
 
