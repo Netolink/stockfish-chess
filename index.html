@@ -445,6 +445,9 @@
         function askEngine() {
             if (game.game_over()) return;
 
+            // הוסף את השורה הזו כאן - מבטיח דף חלק למנוע לפני כל מהלך
+            stockfish.postMessage('stop');
+
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
             stockfish.postMessage('uci');
@@ -621,7 +624,29 @@
             if (playerSide === 'b') askEngine();
         }
 
-        function undoMove() { game.undo(); game.undo(); board.position(game.fen(), true); removeHighlights(); updateUI(); }
+        function undoMove() {
+            // 1. הטיפ הקריטי: אומרים למנוע להפסיק לחשב מיד כדי למנוע תקיעה
+            stockfish.postMessage('stop');
+
+            // 2. בדיקה: האם המחשב באמצע המחשבה (כלומר לא תור השחקן)?
+            if (game.turn() !== playerSide) {
+                // המחשב חושב על מהלך - נבטל רק את המהלך האחרון של המשתמש
+                game.undo();
+            } else {
+                // המחשב כבר שיחק - נבטל את המהלך של המחשב ואת המהלך של המשתמש
+                game.undo();
+                game.undo();
+            }
+
+            // 3. עדכון ויזואלי של הלוח והממשק
+            board.position(game.fen(), true);
+            removeHighlights();
+
+            // 4. איפוס הסטטוס ל-"Ready" במקום להישאר על "Thinking"
+            $('#status').text('Ready');
+            updateUI();
+        }
+
         function resign() { if (confirm("Resign?")) { alert("You resigned."); resetGame(); } }
 
         function rematch() {
