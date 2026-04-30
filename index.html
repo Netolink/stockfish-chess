@@ -203,6 +203,11 @@
             color: white !important;
             width: 100%;
         }
+
+        /* מבטיח שהכלים החדשים יופיעו מיד ללא השהיה גרפית */
+        .chessboard-63f59 {
+            image-rendering: -webkit-optimize-contrast;
+        }
     </style>
 </head>
 
@@ -349,11 +354,23 @@
                 onDrop: function (source, target) {
                     if (source === target) return;
 
-                    let move = game.move({ from: source, to: target, promotion: 'q' });
+                    // בדיקה האם המהלך הוא הכתרה
+                    const piece = game.get(source);
+                    const isPromotion = piece && piece.type === 'p' &&
+                        ((piece.color === 'w' && target[1] === '8') ||
+                            (piece.color === 'b' && target[1] === '1'));
+
+                    let moveOptions = { from: source, to: target, promotion: 'q' };
+
+                    if (isPromotion) {
+                        const promo = prompt("Promote to: (q)ueen, (r)ook, (b)ishop, or (k)night?", "q");
+                        moveOptions.promotion = ['q', 'r', 'b', 'n'].includes(promo?.toLowerCase()) ? promo.toLowerCase() : 'q';
+                    }
+
+                    let move = game.move(moveOptions);
                     if (move === null) return 'snapback';
 
-                    // הפתרון המנצח: עדכון המיקום ללא אנימציה (מכיוון שהשחקן כבר גרר)
-                    // זה יגרום לצריח להופיע מיידית במקומו בלי השהיה ובלי כפל כלים
+                    // העדכון החשוב ביותר: רענון הלוח כדי שהרגלי יהפוך לכלי הנבחר
                     board.position(game.fen(), false);
 
                     sourceSquare = null;
