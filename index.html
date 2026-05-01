@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Netolink AI Labs - Stockfish Chess</title>
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -207,6 +208,64 @@
         /* מבטיח שהכלים החדשים יופיעו מיד ללא השהיה גרפית */
         .chessboard-63f59 {
             image-rendering: -webkit-optimize-contrast;
+        }
+
+        /* שינוי המכולה הראשית */
+        .container {
+            display: flex;
+            gap: 20px;
+            background: #1e1e1e;
+            padding: 15px;
+            /* הקטנת הריפוד במובייל */
+            border-radius: 16px;
+            width: 95%;
+            /* תפיסת רוב רוחב המסך */
+            max-width: 800px;
+            flex-direction: row;
+            /* ברירת מחדל למחשב */
+            flex-wrap: wrap;
+            /* מאפשר אלמנטים אחד מתחת לשני */
+            justify-content: center;
+        }
+
+        /* התאמת הלוח - הכי חשוב! */
+        #board {
+            width: 100vw;
+            /* תפיסת רוחב המסך */
+            max-width: 450px;
+            /* אבל לא יותר מהגודל המקורי */
+            height: auto;
+        }
+
+        /* התאמת סרגל הצד */
+        .sidebar {
+            width: 100%;
+            /* במובייל יתפוס את כל הרוחב */
+            max-width: 450px;
+            /* שיהיה ברוחב של הלוח */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Media Query למכשירים ניידים */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                /* לוח מעל סרגל כלים */
+                align-items: center;
+                padding: 10px;
+            }
+
+            #board {
+                max-width: 350px;
+                /* גודל נוח יותר לסמארטפונים */
+            }
+
+            .score {
+                font-size: 1.5em;
+                /* הקטנת הטקסט למסכים קטנים */
+            }
         }
     </style>
 </head>
@@ -417,6 +476,8 @@
                 moveSpeed: 'fast',
                 pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             });
+
+            $(window).on('resize', board.resize);
 
             // תמיכה בהשלמת מהלך בלחיצה על משבצת יעד (קליק-קליק)
             $('#board').on('mousedown', '.square-55d63', function (e) {
