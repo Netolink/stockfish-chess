@@ -519,6 +519,9 @@
             stockfish.postMessage('setoption name Hash value 128');
             stockfish.postMessage('setoption name Use NNUE value true');
 
+            // פקודת הקסם: מבקשים מהמנוע לאשר שהוא מוכן לפני שמתחילים
+            stockfish.postMessage('isready');
+
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage('go depth 18');
         }
