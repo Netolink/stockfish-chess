@@ -561,17 +561,19 @@
                 return;
             }
 
-            // 1. עצירה מוחלטת
+            // 1. עצירה וניקוי
             stockfish.postMessage('stop');
-
-            // 2. פקודת ה"התעוררות" הקריטית - חייבת לבוא עם isready
             stockfish.postMessage('ucinewgame');
-            stockfish.postMessage('isready');
 
+            // 2. עדכון הסטטוס ב-UI
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
-            // 3. שליחת העמדה והתחלת חישוב
+            // 3. שליחת העמדה
             stockfish.postMessage('position fen ' + game.fen());
+
+            // 4. "הדחיפה" הסופית: שליחת isready ומיד אחריה ה-go
+            // זה מבטיח שהמנוע יסיים לעבד את ה-position לפני שהוא מתחיל לחשב
+            stockfish.postMessage('isready');
             stockfish.postMessage('go depth 18 movetime 10000');
         }
 
