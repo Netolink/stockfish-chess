@@ -565,24 +565,31 @@
 
         stockfish.onmessage = function (event) {
             let msg = event.data;
-            console.log("SF Output:", msg); // שורת אבחון קריטית
+            //console.log("SF Output:", msg); // שורת אבחון קריטית
 
             // 1. עדכון מדד ההערכה (Score)
             if (msg.includes('score cp')) {
                 let scoreVal = (msg.split('score cp ')[1].split(' ')[0] / 100).toFixed(2);
-                // התאמת הציון לפי הצד של השחקן
                 $('#score').text(playerSide === 'w' ? scoreVal : (scoreVal * -1).toFixed(2));
             }
 
             // 2. ביצוע המהלך הטוב ביותר של המנוע
             if (msg.includes('bestmove')) {
-                // עדכון הסטטוס מיד עם קבלת המהלך
-                $('#status').text(game.turn() === playerSide ? 'Your Turn' : 'Waiting...');
-
                 let bestMove = msg.split('bestmove ')[1].split(' ')[0];
 
-                // מוודא שהמהלך תקין ושזה לא תור השחקן
-                if (bestMove && bestMove !== '(none)' && game.turn() !== playerSide) {
+                // --- הבלוק המתוקן למניעת תקיעה ---
+                if (!bestMove || bestMove === '(none)' || game.game_over()) {
+                    // אם אין מהלך, נעדכן את הסטטוס ונבצע UI Update כדי לשחרר את הממשק
+                    $('#status').text(game.game_over() ? 'Game Over' : 'Your Turn');
+                    updateUI();
+                    return; // עוצרים כאן
+                }
+
+                // אם הגענו לכאן, יש מהלך חוקי
+                $('#status').text(game.turn() === playerSide ? 'Your Turn' : 'Waiting...');
+
+                // מוודא שזה לא תור השחקן לפני ביצוע מהלך המחשב
+                if (game.turn() !== playerSide) {
                     let move = game.move({
                         from: bestMove.substring(0, 2),
                         to: bestMove.substring(2, 4),
