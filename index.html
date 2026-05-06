@@ -561,20 +561,21 @@
                 return;
             }
 
-            // 1. עצירה וניקוי
+            // 1. עצירה וניקוי מוחלט
             stockfish.postMessage('stop');
             stockfish.postMessage('ucinewgame');
+            stockfish.postMessage('isready'); // מחסום ראשון
 
-            // 2. עדכון הסטטוס ב-UI
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
-            // 3. שליחת העמדה
-            stockfish.postMessage('position fen ' + game.fen());
+            // 2. השהיה קטנה כדי לתת למנוע "לנשום" אחרי הניקוי
+            setTimeout(function () {
+                stockfish.postMessage('position fen ' + game.fen());
+                stockfish.postMessage('isready'); // מחסום שני להבטחת טעינת העמדה
 
-            // 4. "הדחיפה" הסופית: שליחת isready ומיד אחריה ה-go
-            // זה מבטיח שהמנוע יסיים לעבד את ה-position לפני שהוא מתחיל לחשב
-            stockfish.postMessage('isready');
-            stockfish.postMessage('go depth 18 movetime 10000');
+                // 3. הפקודה שאתה רוצה - עוצמה מלאה (אל דאגה, לא נגעתי בערכים)
+                stockfish.postMessage('go depth 18 movetime 10000');
+            }, 50); // 50 מילישניות זה כל מה שצריך כדי למנוע את הנתק
         }
 
         stockfish.onmessage = function (event) {
