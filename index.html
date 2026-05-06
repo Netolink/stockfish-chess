@@ -561,21 +561,24 @@
                 return;
             }
 
-            // 1. עצירה וניקוי מוחלט
+            // 1. עצירה וניקוי - שולחים ומחכים רגע
             stockfish.postMessage('stop');
             stockfish.postMessage('ucinewgame');
-            stockfish.postMessage('isready'); // מחסום ראשון
+            stockfish.postMessage('isready');
 
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
-            // 2. השהיה קטנה כדי לתת למנוע "לנשום" אחרי הניקוי
+            // 2. משתמשים ב-setTimeout כדי להפריד את שלב ה"הכנה" משלב ה"ביצוע"
             setTimeout(function () {
+                // שולחים את המיקום
                 stockfish.postMessage('position fen ' + game.fen());
-                stockfish.postMessage('isready'); // מחסום שני להבטחת טעינת העמדה
 
-                // 3. הפקודה שאתה רוצה - עוצמה מלאה (אל דאגה, לא נגעתי בערכים)
+                // מוודאים שוב שהמנוע מוכן לקבל את פקודת ה-go
+                stockfish.postMessage('isready');
+
+                // פקודת ה-go המקורית שלך (עומק 18, זמן 10000)
                 stockfish.postMessage('go depth 18 movetime 10000');
-            }, 50); // 50 מילישניות זה כל מה שצריך כדי למנוע את הנתק
+            }, 100); // 100 מילישניות יבטיחו שהמנוע סיים את ה-readyok של האתחול
         }
 
         stockfish.onmessage = function (event) {
