@@ -564,7 +564,7 @@
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
             stockfish.postMessage(`position fen ${game.fen()}`);
-            stockfish.postMessage('go depth 18 movetime 10000');
+            stockfish.postMessage('go depth 18 movetime 2000');
         }
 
         stockfish.onmessage = function (event) {
@@ -581,8 +581,8 @@
             // 2. ביצוע המהלך הטוב ביותר של המנוע
             if (msg.includes('bestmove')) {
                 // עדכון הסטטוס מיד עם קבלת המהלך
-                $('#status').text(playerSide === 'w' ? 'Your Turn' : 'Waiting...');
-                
+                $('#status').text(game.turn() === playerSide ? 'Your Turn' : 'Waiting...');
+
                 let bestMove = msg.split('bestmove ')[1].split(' ')[0];
 
                 // מוודא שהמהלך תקין ושזה לא תור השחקן
