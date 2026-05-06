@@ -403,10 +403,21 @@
         }
 
         $(document).ready(function () {
+
+            // בדיקה האם הגענו מה-Editor
+            const customFen = localStorage.getItem('customStartingPosition');
+            const customSide = localStorage.getItem('playerSide');
+
+            if (customFen) {
+                game.load(customFen);
+                playerSide = customSide;
+                localStorage.removeItem('customStartingPosition');
+            }
+
             // אתחול הלוח המאוחד של Netolink
             board = Chessboard('board', {
                 draggable: true,
-                position: 'start',
+                position: (typeof customFen !== 'undefined' && customFen) ? customFen : 'start',
                 // טיפול בתחילת גרירה/לחיצה
                 onDragStart: function (source, piece, position, orientation) {
                     // 1. הגבלה לכפתור שמאלי בלבד
@@ -455,7 +466,9 @@
                             game.move({ from: source, to: target, promotion: selectedPiece });
                             board.position(game.fen(), false);
 
-                            completeMove(source, target);
+                            // במקום completeMove(source, target); - שים את אלו:
+                            updateUI();
+                            setTimeout(askEngine, 300);
                         });
                         return;
                     }
@@ -490,6 +503,11 @@
             });
 
             updateUI();
+
+            // אם בחידה שיצרת תור המחשב, אנחנו מפעילים אותו אוטומטית
+            if (game.turn() !== playerSide) {
+                setTimeout(askEngine, 500);
+            }
         });
 
         // 1. הגדרת הנתיבים מראש - זה הקסם שפותר את השגיאות ב-Console

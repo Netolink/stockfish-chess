@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Netolink AI Labs - Board Editor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <style>
+        /* העתקת הסטייל מהקוד הראשי לשמירה על אחידות */
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        .container { display: flex; gap: 20px; background: #1e1e1e; padding: 15px; border-radius: 16px; width: 95%; max-width: 800px; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+        #board { width: 100vw; max-width: 450px; height: auto; border: 2px solid #333; }
+        .sidebar { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
+        .engine-card { background: #000; padding: 15px; border-radius: 8px; border-left: 4px solid #4af; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button { cursor: pointer; padding: 10px; background: #4af; color: #000; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #6bc4ff; }
+        .btn-play { background: #28a745; color: white; grid-column: span 2; font-size: 1.2em; }
+        .btn-alt { background: #333; color: #ccc; }
+        .active-side { border: 2px solid #4af; background: #004466; color: white; }
+        @media (max-width: 768px) { .container { flex-direction: column; align-items: center; } }
+    </style>
+</head>
+<body>
+
+    <h1 style="font-weight: 300; margin-bottom: 20px;">Netolink AI - Board Editor</h1>
+
+    <div class="container">
+        <div id="board"></div>
+
+        <div class="sidebar">
+            <div class="engine-card">
+                <small style="color: #666;">INSTRUCTIONS</small>
+                <p style="font-size: 0.85em; color: #aaa; margin: 5px 0;">
+                    גרור כלים ללוח כדי להציבם. זרוק כלי מחוץ ללוח כדי למחוק אותו. 
+                    בחר מי מתחיל ולחץ על "Start Game".
+                </p>
+            </div>
+
+            <div class="controls">
+                <div style="grid-column: span 2; text-align: center; margin-bottom: 5px;">Who starts?</div>
+                <button id="startWhite" class="active-side" onclick="setTurn('w')">White to Move</button>
+                <button id="startBlack" onclick="setTurn('b')">Black to Move</button>
+            </div>
+
+            <div class="controls">
+                <button class="btn-alt" onclick="board.clear()">Clear Board</button>
+                <button class="btn-alt" onclick="board.start()">Initial Position</button>
+                <button class="btn-play" id="playBtn" onclick="switchToGameMode()">Start Game vs AI</button>
+            </div>
+            
+            <button class="btn-alt" onclick="window.location.href='index.html'">Back to Main Game</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+    <script>
+        let board = null;
+        let selectedTurn = 'w'; // ברירת מחדל: הלבן מתחיל
+
+        // הגדרת לוח עריכה עם sparePieces
+        $(document).ready(function() {
+            board = Chessboard('board', {
+                draggable: true,
+                dropOffBoard: 'trash', // מאפשר למחוק כלים בגרירה החוצה
+                sparePieces: true,     // מוסיף את מאגר הכלים
+                position: 'start',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            });
+            $(window).on('resize', board.resize);
+        });
+
+        function setTurn(t) {
+            selectedTurn = t;
+            $('#startWhite').toggleClass('active-side', t === 'w');
+            $('#startBlack').toggleClass('active-side', t === 'b');
+        }
+
+        function switchToGameMode() {
+            // קבלת מצב הכלים הנוכחי בפורמט FEN
+            const fen = board.fen();
+            
+            // בדיקת תקינות בסיסית באמצעות chess.js
+            const testGame = new Chess();
+            // בניית FEN מלא: מצב הכלים + מי מתחיל + אין הצרחות/דרך הילוכו (לפשטות בחידות)
+            const fullFen = `${fen} ${selectedTurn} KQkq - 0 1`;
+            
+            const isValid = testGame.load(fullFen);
+            
+            if (!isValid) {
+                alert("Invalid Position! (Make sure both kings are on the board and it's a legal state)");
+                return;
+            }
+
+            // שמירת ה-FEN בזיכרון הדפדפן כדי להעביר אותו לעמוד הראשי
+            localStorage.setItem('customStartingPosition', fullFen);
+            localStorage.setItem('playerSide', selectedTurn);
+            
+            // מעבר לעמוד הראשי
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
