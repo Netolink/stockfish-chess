@@ -101,9 +101,9 @@
             }
         }
 
-        /* מחביא את המלכים הלבנים והשחורים ממאגר הכלים הרזרביים */
-        .spare-pieces-74527 img[data-piece="wK"],
-        .spare-pieces-74527 img[data-piece="bK"] {
+        /* מסתיר את המלכים משורת הכלים הרזרביים בכל מצב */
+        div[class^="spare-pieces"] img[data-piece="wK"],
+        div[class^="spare-pieces"] img[data-piece="bK"] {
             display: none !important;
         }
     </style>
@@ -199,26 +199,23 @@
         function switchToGameMode() {
             const fen = board.fen();
             const testGame = new Chess();
+
+            // בניית FEN מלא לבדיקה
             const fullFen = `${fen} ${selectedTurn} KQkq - 0 1`;
 
-            // אימות (Verification) לפני מעבר
+            // בדיקה 1: האם יש מלכים?
             if (!fen.includes('K') || !fen.includes('k')) {
-                alert("שגיאה קריטית: המלכים חייבים להיות על הלוח!");
+                alert("חובה להציב מלך לבן ומלך שחור על הלוח!");
                 return;
             }
 
-            const isValid = testGame.load(fullFen);
-            if (!isValid) {
-                alert("עמדה לא חוקית! בדוק שהמלכים לא מאוימים בצורה לא חוקית.");
+            // בדיקה 2: האם העמדה חוקית מבחינת chess.js?
+            if (!testGame.load(fullFen)) {
+                alert("עמדה לא חוקית! (למשל: המלך תחת שח לא אפשרי)");
                 return;
             }
 
-            if (testGame.in_checkmate()) {
-                alert("העמדה היא מט! אי אפשר להתחיל משחק ממצב סופי.");
-                return;
-            }
-
-            // שמירה ומעבר לעמוד הראשי
+            // אם הכל עבר - שומרים ועוברים
             localStorage.setItem('customStartingPosition', fullFen);
             localStorage.setItem('playerSide', selectedTurn);
             window.location.href = 'index.html';

@@ -646,7 +646,10 @@
         }
 
         function updateUI() {
-            $('#history').text(game.pgn());
+            // שינוי כאן: מציג רק את המהלכים שבוצעו ללא נתוני ה-SetUp המבלבלים
+            const moveHistory = game.history().join(' ');
+            $('#history').text(moveHistory.length > 0 ? moveHistory : "No moves yet...");
+
             $('#status').text(game.turn() === playerSide ? 'Your Turn' : 'Waiting...');
             updateCapturedPieces();
 
