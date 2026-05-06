@@ -564,6 +564,7 @@
             // עצירה וניקוי תור ההודעות של המנוע
             stockfish.postMessage('stop');
             stockfish.postMessage('ucinewgame'); // פקודת הניקוי הקריטית
+            stockfish.postMessage('isready');
 
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
