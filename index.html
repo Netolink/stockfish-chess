@@ -570,6 +570,7 @@
 
             // שליחה מסודרת של המיקום
             stockfish.postMessage('position fen ' + game.fen());
+            stockfish.postMessage('isready');
 
             // פקודת חישוב עם מגבלת זמן קשיחה
             stockfish.postMessage('go depth 18 movetime 5000');
