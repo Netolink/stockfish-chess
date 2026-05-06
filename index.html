@@ -436,8 +436,17 @@
 
             if (customFen) {
                 game.load(customFen);
-                playerSide = customSide;
+                playerSide = customSide || 'w'; // הצד שבחרת ב-Editor
+
+                // הפיכת הלוח אם בחרת להיות שחור
+                if (playerSide === 'b') {
+                    board.orientation('black');
+                } else {
+                    board.orientation('white');
+                }
+
                 localStorage.removeItem('customStartingPosition');
+                // localStorage.removeItem('playerSide'); // אופציונלי: לנקות גם את זה
             }
 
             // אתחול הלוח המאוחד של Netolink
@@ -532,6 +541,7 @@
 
             // אם בחידה שיצרת תור המחשב, אנחנו מפעילים אותו אוטומטית
             if (game.turn() !== playerSide) {
+                $('#status').text('Stockfish is thinking...');
                 setTimeout(askEngine, 500);
             }
         });

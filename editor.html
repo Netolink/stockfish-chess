@@ -119,7 +119,8 @@
         <div class="sidebar">
             <div class="engine-card">
                 <small style="color: #666;">INSTRUCTIONS</small>
-                <p style="font-size: 0.85em; color: #aaa; margin: 5px 0;">Drag to place pieces, drop outside to delete. Select starting side and click 'Start Game'.</p>
+                <p style="font-size: 0.85em; color: #aaa; margin: 5px 0;">Drag to place pieces, drop outside to delete.
+                    Select starting side and click 'Start Game'.</p>
             </div>
 
             <div class="controls">
@@ -201,25 +202,24 @@
         function switchToGameMode() {
             const fen = board.fen();
             const testGame = new Chess();
+            const selectedSide = $('#playerSide').val(); // שליפת הערך מה-Select (White/Black)
 
-            // בניית FEN מלא לבדיקה
+            // בניית FEN מלא: המיקום מהלוח + מי שמתחיל (selectedTurn)
             const fullFen = `${fen} ${selectedTurn} KQkq - 0 1`;
 
-            // בדיקה 1: האם יש מלכים?
             if (!fen.includes('K') || !fen.includes('k')) {
-                alert("חובה להציב מלך לבן ומלך שחור על הלוח!");
+                alert("Both a White King and a Black King must be placed on the board!");
                 return;
             }
 
-            // בדיקה 2: האם העמדה חוקית מבחינת chess.js?
             if (!testGame.load(fullFen)) {
-                alert("עמדה לא חוקית! (למשל: המלך תחת שח לא אפשרי)");
+                alert("Invalid position! (e.g., the king cannot be in check on its opponent's turn)");
                 return;
             }
 
-            // אם הכל עבר - שומרים ועוברים
+            // שמירת הנתונים למעבר ל-index.html
             localStorage.setItem('customStartingPosition', fullFen);
-            localStorage.setItem('playerSide', selectedTurn);
+            localStorage.setItem('playerSide', selectedSide);
             window.location.href = 'index.html';
         }
     </script>
