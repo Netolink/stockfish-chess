@@ -128,6 +128,14 @@
                 <button id="startWhite" class="active-side" onclick="setTurn('w')">White to Move</button>
                 <button id="startBlack" onclick="setTurn('b')">Black to Move</button>
             </div>
+            <div style="margin-top: 20px;">
+                <label for="playerSide" style="color: #fff; margin-right: 10px;">Play as:</label>
+                <select id="playerSide"
+                    style="padding: 5px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+                    <option value="w" selected>White</option>
+                    <option value="b">Black</option>
+                </select>
+            </div>
 
             <div class="controls">
                 <button class="btn-alt" onclick="board.position('4k3/8/8/8/8/8/8/4K3')">Clear Board</button>

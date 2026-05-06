@@ -447,7 +447,7 @@
                 draggable: true,
                 // כאן הקסם: הלוח יתהפך אם בחרת שחור ב-Editor
                 orientation: playerSide === 'b' ? 'black' : 'white',
-                position: (customFen) ? customFen : 'start',
+                position: (typeof customFen !== 'undefined' && customFen) ? customFen : 'start',
 
                 onDragStart: function (source, piece, position, orientation) {
                     if (window.event && window.event.which !== 1) return false;
