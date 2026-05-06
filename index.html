@@ -557,23 +557,22 @@
 
         function askEngine() {
             if (game.game_over()) {
-                stockfish.postMessage('stop'); // מבטיח שהמנוע לא רץ ברקע
+                stockfish.postMessage('stop');
                 return;
             }
 
-            // עצירה וניקוי תור ההודעות של המנוע
+            // 1. עצירה מוחלטת
             stockfish.postMessage('stop');
-            stockfish.postMessage('ucinewgame'); // פקודת הניקוי הקריטית
+
+            // 2. פקודת ה"התעוררות" הקריטית - חייבת לבוא עם isready
+            stockfish.postMessage('ucinewgame');
             stockfish.postMessage('isready');
 
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
-            // שליחה מסודרת של המיקום
+            // 3. שליחת העמדה והתחלת חישוב
             stockfish.postMessage('position fen ' + game.fen());
-            stockfish.postMessage('isready');
-
-            // פקודת חישוב עם מגבלת זמן קשיחה
-            stockfish.postMessage('go depth 18 movetime 5000');
+            stockfish.postMessage('go depth 18 movetime 10000');
         }
 
         stockfish.onmessage = function (event) {
