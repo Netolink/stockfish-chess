@@ -547,24 +547,21 @@
         // 2. טעינת ה-Worker (בלי ה-?v= כדי לא לבלבל את המנוע הפנימי)
         const stockfish = new Worker('sf18.js');
 
+        // פקודות אתחול חד-פעמיות (מחוץ ל-askEngine)
+        stockfish.postMessage('uci');
+        stockfish.postMessage('setoption name MultiPV value 2');
+        stockfish.postMessage('setoption name Threads value 1');
+        stockfish.postMessage('setoption name Hash value 128');
+        stockfish.postMessage('setoption name Use NNUE value true');
+        stockfish.postMessage('isready'); // פקודת הקסם: מבקשים מהמנוע לאשר שהוא מוכן לפני שמתחילים
+
         function askEngine() {
             if (game.game_over()) return;
 
-            // הוסף את השורה הזו כאן - מבטיח דף חלק למנוע לפני כל מהלך
+            // עצירת כל חישוב קודם שנשאר פתוח
             stockfish.postMessage('stop');
 
             $('#status').text('Stockfish 18 (Neural) is thinking...');
-
-            stockfish.postMessage('uci');
-            // הוספת גיוון: המנוע יבחן את 3 המהלכים הכי טובים
-            stockfish.postMessage('setoption name MultiPV value 2');
-            // עומק ומהירות חישוב
-            stockfish.postMessage('setoption name Threads value 1');
-            stockfish.postMessage('setoption name Hash value 128');
-            stockfish.postMessage('setoption name Use NNUE value true');
-
-            // פקודת הקסם: מבקשים מהמנוע לאשר שהוא מוכן לפני שמתחילים
-            stockfish.postMessage('isready');
 
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage('go depth 18 movetime 10000');
@@ -583,6 +580,9 @@
 
             // 2. ביצוע המהלך הטוב ביותר של המנוע
             if (msg.includes('bestmove')) {
+                // עדכון הסטטוס מיד עם קבלת המהלך
+                $('#status').text(playerSide === 'w' ? 'Your Turn' : 'Waiting...');
+                
                 let bestMove = msg.split('bestmove ')[1].split(' ')[0];
 
                 // מוודא שהמהלך תקין ושזה לא תור השחקן
