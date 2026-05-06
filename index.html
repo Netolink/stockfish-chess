@@ -429,25 +429,25 @@
         }
 
         $(document).ready(function () {
-
-            // 1. בדיקה האם הגענו מה-Editor - שליפת הנתונים
+            // 1. שליפת נתונים מה-Editor
             const customFen = localStorage.getItem('customStartingPosition');
             const customSide = localStorage.getItem('playerSide');
 
+            // הגדרת ברירת מחדל כדי שהקוד לא יקרוס
+            playerSide = 'w';
+
             if (customFen) {
                 game.load(customFen);
-                playerSide = customSide || 'w'; // מעדכן את הצד שבחרת ב-Editor
-
-                // הערה: את ה-orientation נגדיר מיד בתוך ה-Chessboard למטה
+                playerSide = customSide || 'w';
                 localStorage.removeItem('customStartingPosition');
             }
 
-            // 2. אתחול הלוח
+            // 2. אתחול הלוח עם הגדרות כיוון (Orientation)
             board = Chessboard('board', {
                 draggable: true,
-                // התיקון כאן: הלוח יתהפך אם playerSide הוא 'b'
+                // כאן הקסם: הלוח יתהפך אם בחרת שחור ב-Editor
                 orientation: playerSide === 'b' ? 'black' : 'white',
-                position: (typeof customFen !== 'undefined' && customFen) ? customFen : 'start',
+                position: (customFen) ? customFen : 'start',
 
                 onDragStart: function (source, piece, position, orientation) {
                     if (window.event && window.event.which !== 1) return false;
@@ -463,7 +463,6 @@
                 },
                 onDrop: function (source, target) {
                     if (source === target) return;
-
                     const piece = game.get(source);
                     const isPromotion = piece && piece.type === 'p' &&
                         ((piece.color === 'w' && target[1] === '8') ||
@@ -474,21 +473,16 @@
                     if (isPromotion) {
                         const colorChar = piece.color;
                         const baseUrl = 'https://chessboardjs.com/img/chesspieces/wikipedia/';
-
                         $('#promotion-options img').each(function () {
                             const pieceType = $(this).data('piece').toUpperCase();
                             $(this).attr('src', `${baseUrl}${colorChar}${pieceType}.png`);
                         });
-
                         $('#promotion-modal').css('display', 'flex');
-
                         $('#promotion-options img').off('click').on('click', function () {
                             const selectedPiece = $(this).data('piece');
                             $('#promotion-modal').hide();
-
                             game.move({ from: source, to: target, promotion: selectedPiece });
                             board.position(game.fen(), false);
-
                             updateUI();
                             setTimeout(askEngine, 300);
                         });
@@ -497,14 +491,11 @@
 
                     let move = game.move(moveOptions);
                     if (move === null) return 'snapback';
-
                     board.position(game.fen(), false);
-
                     sourceSquare = null;
                     removeHighlights();
                     highlightLastMove(source, target);
                     updateUI();
-
                     setTimeout(askEngine, 300);
                 },
                 moveSpeed: 'fast',
@@ -512,21 +503,18 @@
             });
 
             $(window).on('resize', board.resize);
-
             $('#board').on('mousedown', '.square-55d63', function (e) {
                 if (e.which !== 1) return;
                 let square = $(this).data('square');
-                if (sourceSquare && sourceSquare !== square) {
-                    onSquareClick(square);
-                }
+                if (sourceSquare && sourceSquare !== square) onSquareClick(square);
             });
 
             updateUI();
 
-            // 3. הפעלת המחשב אוטומטית אם זה תורו
+            // 3. הפעלת המחשב אוטומטית אם זה תורו (למשל: בחרת שחור והלבן מתחיל)
             if (game.turn() !== playerSide) {
-                $('#status').text('Stockfish is thinking...');
-                setTimeout(askEngine, 500);
+                $('#status').text('Stockfish is starting...');
+                setTimeout(askEngine, 800);
             }
         });
 
