@@ -130,11 +130,13 @@
             </div>
             <div style="margin-top: 20px;">
                 <label for="playerSide" style="color: #fff; margin-right: 10px;">Play as:</label>
-                <select id="playerSide"
-                    style="padding: 5px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
-                    <option value="w" selected>White</option>
-                    <option value="b">Black</option>
-                </select>
+                <div style="margin-bottom: 15px; text-align: center;">
+                    <div style="color: #fff; margin-bottom: 10px; font-weight: bold;">I want to play as:</div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button id="playWhite" class="side-btn active-side" onclick="setPlayerSide('w')">White</button>
+                        <button id="playBlack" class="side-btn" onclick="setPlayerSide('b')">Black</button>
+                    </div>
+                </div>
             </div>
 
             <div class="controls">
@@ -155,6 +157,7 @@
     <script>
         let board = null;
         let selectedTurn = 'w';
+        let playerSide = 'w'; // ברירת מחדל - המשתמש לבן
 
         // הגדרת המיקום ההתחלתי: רק מלכים במקומם המקורי
         const kingsOnlyPosition = {
@@ -207,13 +210,17 @@
             $('#startBlack').toggleClass('active-side', t === 'b');
         }
 
+        function setPlayerSide(side) {
+            playerSide = side;
+            $('#playWhite').toggleClass('active-side', side === 'w');
+            $('#playBlack').toggleClass('active-side', side === 'b');
+        }
+
         function switchToGameMode() {
             const fen = board.fen();
             const testGame = new Chess();
-            // שליפת הצד שבחרת לשחק (White/Black) מה-Select
-            const selectedSide = $('#playerSide').val() || 'w';
 
-            // בניית FEN מלא שכולל את מי שמתחיל (selectedTurn)
+            // בניית ה-FEN המלא
             const fullFen = `${fen} ${selectedTurn} KQkq - 0 1`;
 
             if (!fen.includes('K') || !fen.includes('k')) {
@@ -226,9 +233,10 @@
                 return;
             }
 
-            // שמירת הנתונים למעבר ל-index.html
+            // שמירה ב-localStorage
             localStorage.setItem('customStartingPosition', fullFen);
-            localStorage.setItem('playerSide', selectedSide);
+            localStorage.setItem('playerSide', playerSide); // משתמש במשתנה המעודכן מהכפתורים
+
             window.location.href = 'index.html';
         }
     </script>
