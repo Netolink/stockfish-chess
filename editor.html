@@ -202,9 +202,10 @@
         function switchToGameMode() {
             const fen = board.fen();
             const testGame = new Chess();
-            const selectedSide = $('#playerSide').val(); // שליפת הערך מה-Select (White/Black)
+            // שליפת הצד שבחרת לשחק (White/Black) מה-Select
+            const selectedSide = $('#playerSide').val() || 'w';
 
-            // בניית FEN מלא: המיקום מהלוח + מי שמתחיל (selectedTurn)
+            // בניית FEN מלא שכולל את מי שמתחיל (selectedTurn)
             const fullFen = `${fen} ${selectedTurn} KQkq - 0 1`;
 
             if (!fen.includes('K') || !fen.includes('k')) {
@@ -213,7 +214,7 @@
             }
 
             if (!testGame.load(fullFen)) {
-                alert("Invalid position! (e.g., the king cannot be in check on its opponent's turn)");
+                alert("Invalid position! (e.g., king in an impossible check)");
                 return;
             }
 

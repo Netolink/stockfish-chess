@@ -430,38 +430,29 @@
 
         $(document).ready(function () {
 
-            // בדיקה האם הגענו מה-Editor
+            // 1. בדיקה האם הגענו מה-Editor - שליפת הנתונים
             const customFen = localStorage.getItem('customStartingPosition');
             const customSide = localStorage.getItem('playerSide');
 
             if (customFen) {
                 game.load(customFen);
-                playerSide = customSide || 'w'; // הצד שבחרת ב-Editor
+                playerSide = customSide || 'w'; // מעדכן את הצד שבחרת ב-Editor
 
-                // הפיכת הלוח אם בחרת להיות שחור
-                if (playerSide === 'b') {
-                    board.orientation('black');
-                } else {
-                    board.orientation('white');
-                }
-
+                // הערה: את ה-orientation נגדיר מיד בתוך ה-Chessboard למטה
                 localStorage.removeItem('customStartingPosition');
-                // localStorage.removeItem('playerSide'); // אופציונלי: לנקות גם את זה
             }
 
-            // אתחול הלוח המאוחד של Netolink
+            // 2. אתחול הלוח
             board = Chessboard('board', {
                 draggable: true,
+                // התיקון כאן: הלוח יתהפך אם playerSide הוא 'b'
+                orientation: playerSide === 'b' ? 'black' : 'white',
                 position: (typeof customFen !== 'undefined' && customFen) ? customFen : 'start',
-                // טיפול בתחילת גרירה/לחיצה
-                onDragStart: function (source, piece, position, orientation) {
-                    // 1. הגבלה לכפתור שמאלי בלבד
-                    if (window.event && window.event.which !== 1) return false;
 
-                    // 2. מניעת הזזת כלי יריב או סיום משחק
+                onDragStart: function (source, piece, position, orientation) {
+                    if (window.event && window.event.which !== 1) return false;
                     if (game.game_over() || piece.search(new RegExp(`^${playerSide}`)) === -1) return false;
 
-                    // 3. לוגיקת סימון (Highlight)
                     if (sourceSquare === source) {
                         sourceSquare = null;
                         removeHighlights();
@@ -473,7 +464,6 @@
                 onDrop: function (source, target) {
                     if (source === target) return;
 
-                    // בדיקה האם המהלך הוא הכתרה
                     const piece = game.get(source);
                     const isPromotion = piece && piece.type === 'p' &&
                         ((piece.color === 'w' && target[1] === '8') ||
@@ -482,13 +472,11 @@
                     let moveOptions = { from: source, to: target, promotion: 'q' };
 
                     if (isPromotion) {
-                        const colorChar = piece.color; // 'w' ללבן, 'b' לשחור
+                        const colorChar = piece.color;
                         const baseUrl = 'https://chessboardjs.com/img/chesspieces/wikipedia/';
 
-                        // עדכון אוטומטי של התמונות בחלונית לפי צבע השחקן
                         $('#promotion-options img').each(function () {
                             const pieceType = $(this).data('piece').toUpperCase();
-                            // בניית כתובת מוחלטת: למשל https://.../wQ.png
                             $(this).attr('src', `${baseUrl}${colorChar}${pieceType}.png`);
                         });
 
@@ -501,7 +489,6 @@
                             game.move({ from: source, to: target, promotion: selectedPiece });
                             board.position(game.fen(), false);
 
-                            // במקום completeMove(source, target); - שים את אלו:
                             updateUI();
                             setTimeout(askEngine, 300);
                         });
@@ -511,7 +498,6 @@
                     let move = game.move(moveOptions);
                     if (move === null) return 'snapback';
 
-                    // העדכון החשוב ביותר: רענון הלוח כדי שהרגלי יהפוך לכלי הנבחר
                     board.position(game.fen(), false);
 
                     sourceSquare = null;
@@ -527,10 +513,8 @@
 
             $(window).on('resize', board.resize);
 
-            // תמיכה בהשלמת מהלך בלחיצה על משבצת יעד (קליק-קליק)
             $('#board').on('mousedown', '.square-55d63', function (e) {
                 if (e.which !== 1) return;
-
                 let square = $(this).data('square');
                 if (sourceSquare && sourceSquare !== square) {
                     onSquareClick(square);
@@ -539,7 +523,7 @@
 
             updateUI();
 
-            // אם בחידה שיצרת תור המחשב, אנחנו מפעילים אותו אוטומטית
+            // 3. הפעלת המחשב אוטומטית אם זה תורו
             if (game.turn() !== playerSide) {
                 $('#status').text('Stockfish is thinking...');
                 setTimeout(askEngine, 500);
