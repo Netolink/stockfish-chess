@@ -556,10 +556,14 @@
         stockfish.postMessage('isready'); // פקודת הקסם: מבקשים מהמנוע לאשר שהוא מוכן לפני שמתחילים
 
         function askEngine() {
-            if (game.game_over()) return;
+            if (game.game_over()) {
+                stockfish.postMessage('stop'); // מבטיח שהמנוע לא רץ ברקע
+                return;
+            }
 
             // עצירה וניקוי תור ההודעות של המנוע
             stockfish.postMessage('stop');
+            stockfish.postMessage('ucinewgame'); // פקודת הניקוי הקריטית
 
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
@@ -675,29 +679,43 @@
         }
 
         function updateUI() {
-            // שינוי כאן: מציג רק את המהלכים שבוצעו ללא נתוני ה-SetUp המבלבלים
+            // 1. עדכון היסטוריית המהלכים
             const moveHistory = game.history().join(' ');
             $('#history').text(moveHistory.length > 0 ? moveHistory : "No moves yet...");
 
-            $('#status').text(game.turn() === playerSide ? 'Your Turn' : 'Waiting...');
             updateCapturedPieces();
 
-            // הסרת סימון שח קודם
+            // 2. ניקוי סימוני שח קודמים
             $('#board [class*="square-"]').removeClass('highlight-check');
 
-            // אם יש שח, מצא את משבצת המלך וצבע אותה באדום
-            if (game.in_check()) {
-                const fen = game.fen().split(' ')[0];
-                const king = game.turn() === 'w' ? 'K' : 'k';
-                let square = findKingSquare(king);
-                $(`#board .square-${square}`).addClass('highlight-check');
-            }
-
-            // טיפול במט - ללא Alert
+            // 3. טיפול במצבי סיום משחק (מט, תיקו, או משחק פעיל)
             if (game.in_checkmate()) {
+                // מצב מט - הסיום שבו אחד הצדדים ניצח
                 $('#status').text('Game Over');
                 $('#game-over-overlay').fadeIn();
                 $('#game-over-msg').text('CHECKMATE - ' + (game.turn() === 'w' ? 'Black Wins' : 'White Wins'));
+            }
+            else if (game.in_draw()) {
+                // כאן הקסם: מטפל במלך מול מלך, פט, חזרות, וחוק 50 המהלכים
+                $('#status').text('Game Over - Draw');
+                $('#game-over-overlay').fadeIn();
+
+                // זיהוי סוג התיקו (אופציונלי להודעה מפורטת יותר)
+                let reason = 'DRAW';
+                if (game.in_stalemate()) reason = 'STALEMATE';
+                else if (game.insufficient_material()) reason = 'DRAW (Insufficient Material)'; // זה המקרה של מלך מול מלך
+
+                $('#game-over-msg').text(reason);
+            }
+            else {
+                // המשחק עדיין פעיל - מעדכנים תור ושח במידת הצורך
+                $('#status').text(game.turn() === playerSide ? 'Your Turn' : 'Waiting...');
+
+                if (game.in_check()) {
+                    const king = game.turn() === 'w' ? 'K' : 'k';
+                    let square = findKingSquare(king);
+                    $(`#board .square-${square}`).addClass('highlight-check');
+                }
             }
         }
 
