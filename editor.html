@@ -185,6 +185,11 @@
 
                     if (piece === 'wK' && whiteKings > 1) return 'snapback';
                     if (piece === 'bK' && blackKings > 1) return 'snapback';
+
+                    // מניעת הנחת רגלי בשורה 1 או 8
+                    if ((piece === 'wP' || piece === 'bP') && (target[1] === '1' || target[1] === '8')) {
+                        return 'snapback';
+                    }
                 }
             });
             $(window).on('resize', board.resize);

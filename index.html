@@ -316,7 +316,7 @@
         style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
         <div
             style="background: #1e1e1e; padding: 25px; border-radius: 12px; text-align: center; border: 2px solid #4facfe;">
-            <h3 style="color: white; margin-bottom: 20px; font-family: sans-serif;">בחר כלי להכתרה</h3>
+            <h3 style="color: white; margin-bottom: 20px; font-family: sans-serif;">Choose piece for promotion</h3>
             <div id="promotion-options" style="display: flex; gap: 20px;">
                 <img data-piece="q" style="width: 75px; cursor: pointer;">
                 <img data-piece="r" style="width: 75px; cursor: pointer;">
@@ -350,10 +350,36 @@
                 const piece = game.get(sourceSquare);
                 let moveOptions = { from: sourceSquare, to: square, promotion: 'q' };
 
-                // בדיקת הכתרה (Promotion)
+                // הבלוק החדש שמשתמש במודאל הקיים
                 if (piece && piece.type === 'p' && (square[1] === '8' || square[1] === '1')) {
-                    const promo = prompt("Promote to: (q)ueen, (r)ook, (b)ishop, or (k)night?", "q");
-                    moveOptions.promotion = ['q', 'r', 'b', 'n'].includes(promo?.toLowerCase()) ? promo.toLowerCase() : 'q';
+                    const colorChar = piece.color;
+                    const baseUrl = 'https://chessboardjs.com/img/chesspieces/wikipedia/';
+
+                    // מעדכן את התמונות במודאל לפי צבע השחקן
+                    $('#promotion-options img').each(function () {
+                        const pieceType = $(this).data('piece').toUpperCase();
+                        $(this).attr('src', `${baseUrl}${colorChar}${pieceType}.png`);
+                    });
+
+                    // מציג את המודאל הקיים
+                    $('#promotion-modal').css('display', 'flex');
+
+                    // מגדיר מה קורה כשלוחצים על כלי במודאל
+                    $('#promotion-options img').off('click').on('click', function () {
+                        const selectedPiece = $(this).data('piece');
+                        $('#promotion-modal').hide();
+
+                        // מבצע את המהלך
+                        let move = game.move({ from: sourceSquare, to: square, promotion: selectedPiece });
+                        if (move) {
+                            board.position(game.fen(), false);
+                            sourceSquare = null;
+                            removeHighlights();
+                            updateUI();
+                            setTimeout(askEngine, 300);
+                        }
+                    });
+                    return; // עוצר את המשך הפונקציה עד לבחירה במודאל
                 }
 
                 let move = game.move(moveOptions);
