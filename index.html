@@ -567,7 +567,7 @@
             stockfish.postMessage('isready');
 
             stockfish.postMessage(`position fen ${game.fen()}`);
-            stockfish.postMessage('go depth 18');
+            stockfish.postMessage('go depth 18 movetime 10000');
         }
 
         stockfish.onmessage = function (event) {
