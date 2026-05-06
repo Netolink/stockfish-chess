@@ -552,7 +552,7 @@
         stockfish.postMessage('setoption name MultiPV value 2');
         stockfish.postMessage('setoption name Threads value 1');
         stockfish.postMessage('setoption name Hash value 128');
-        stockfish.postMessage('setoption name Use NNUE value true');
+        //stockfish.postMessage('setoption name Use NNUE value true');
         stockfish.postMessage('isready'); // פקודת הקסם: מבקשים מהמנוע לאשר שהוא מוכן לפני שמתחילים
 
         function askEngine() {
@@ -567,7 +567,7 @@
             stockfish.postMessage('position fen ' + game.fen());
 
             // פקודת חישוב עם מגבלת זמן קשיחה
-            stockfish.postMessage('go depth 18 movetime 2000');
+            stockfish.postMessage('go depth 18 movetime 5000');
         }
 
         stockfish.onmessage = function (event) {
