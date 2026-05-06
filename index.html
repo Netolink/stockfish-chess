@@ -558,18 +558,21 @@
         function askEngine() {
             if (game.game_over()) return;
 
-            // עצירת כל חישוב קודם שנשאר פתוח
+            // עצירה וניקוי תור ההודעות של המנוע
             stockfish.postMessage('stop');
 
             $('#status').text('Stockfish 18 (Neural) is thinking...');
 
-            stockfish.postMessage(`position fen ${game.fen()}`);
+            // שליחה מסודרת של המיקום
+            stockfish.postMessage('position fen ' + game.fen());
+
+            // פקודת חישוב עם מגבלת זמן קשיחה
             stockfish.postMessage('go depth 18 movetime 2000');
         }
 
         stockfish.onmessage = function (event) {
             let msg = event.data;
-            //console.log("SF says:", msg); // חשוב מאוד לראות את התקשורת ב-Console
+            console.log("SF Output:", msg); // שורת אבחון קריטית
 
             // 1. עדכון מדד ההערכה (Score)
             if (msg.includes('score cp')) {
